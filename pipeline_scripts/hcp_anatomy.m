@@ -724,7 +724,12 @@ if dopipeautomatic,
             system(str);
             
             sourcemodel2d = ft_read_headshape({outputsurffile strrep(outputsurffile,'.L','.R')});
-            
+            if isfield(sourcemodel2d, 'hemisphere')
+              sourcemodel2d.brainstructure = sourcemodel2d.hemisphere;
+              sourcemodel2d.brainstructurelabel = {'CORTEX_LEFT' 'CORTEX_RIGHT'};
+              sourcemodel2d = rmfield(sourcemodel2d, {'hemisphere', 'hemispherelabel'});
+            end
+
             % convert to mm units and change the coordinate system
             sourcemodel2d = ft_convert_units(sourcemodel2d, 'mm');
             sourcemodel2d = ft_transform_geometry(transform.spm2bti, sourcemodel2d);

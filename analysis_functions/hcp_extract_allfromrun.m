@@ -1,13 +1,13 @@
 function [cleanTrl] = hcp_extract_allfromrun(inCfg)
 %% This function performs the core processing of the tmegpreproc and rmegpreproc pipelines.
 % It extracts  trial data for a give data group and fuses them with the
-% results from hcp_baddata.m pipeline so that bad channels and trials that 
-% coincide with noisy periods are removed. In the case that a trial spans 
-% a long block of data, in order to avoid removing it entirely, the bad 
-% segments in the trials are replaced with nan. (This is the case for the Story/Math data groups BSENT and BUN). 
-% Then the IC components identified as related to heart or eye activity by hcp_icaclass.m pipeline are removed. 
-% Then the data is resampled to one fourth of the original sampling frequency in order to reduce the size of the 
-% dataset. 
+% results from hcp_baddata.m pipeline so that bad channels and trials that
+% coincide with noisy periods are removed. In the case that a trial spans
+% a long block of data, in order to avoid removing it entirely, the bad
+% segments in the trials are replaced with nan. (This is the case for the Story/Math data groups BSENT and BUN).
+% Then the IC components identified as related to heart or eye activity by hcp_icaclass.m pipeline are removed.
+% Then the data is resampled to one fourth of the original sampling frequency in order to reduce the size of the
+% dataset.
 %
 %
 % INPUT:
@@ -17,8 +17,8 @@ function [cleanTrl] = hcp_extract_allfromrun(inCfg)
 %          Fields:
 %                .datafile:  This is the raw data filename for a given scan.
 %                .trl:       This is the trials definition matrix. It has 3 columns and number of rows equal to number of trials. The
-%                              first column is the start sample, the second is the end sample and time offset of the start of the trial 
-%                              relative to the 0 reference point. This information is created by the trial definition functions. 
+%                              first column is the start sample, the second is the end sample and time offset of the start of the trial
+%                              relative to the 0 reference point. This information is created by the trial definition functions.
 %                .badchanfile: This is the file containing information about bad channels. This information is created by
 %                                 hcp_baddata.m pipeline.
 %                .badsegmfile: This is the file containing information about bad segments. This information is created by
@@ -30,9 +30,9 @@ function [cleanTrl] = hcp_extract_allfromrun(inCfg)
 %                              for replacing with NANs.  This field is set in the alltrialdefparams_*.m scripts.
 %
 %                .montage:     This is the montage containing the emg channels. This
-%                                variable is constructed by the hcp_exgmontage.m function. 
-%                                In .labelnew subfield , the expected emg channels names are  expected to be 
-%                                {'EMG_LH','EMG_LF','EMG_RH','EMG_RF'}        
+%                                variable is constructed by the hcp_exgmontage.m function.
+%                                In .labelnew subfield , the expected emg channels names are  expected to be
+%                                {'EMG_LH','EMG_LF','EMG_RH','EMG_RF'}
 %                .lineFreq:    Numerical array that contain the frequencies
 %                                of line current to be filtered out i.e. [60 120].
 %                .outputfile:   The filename of the data file where the cleaned data will be saved.
@@ -40,10 +40,10 @@ function [cleanTrl] = hcp_extract_allfromrun(inCfg)
 %
 % OUTPUT
 %-----------------------------------------------------------
-% cleanTrl : %   This is a numerical matrix similar to the input inCfg.trl trials definition matrix described above. 
-%                It has 3 columns and number of rows equal to number of CLEAN trials that remained after the cleaning performed. 
-%                The first column is the start sample, the second is the end sample and time offset of the start of the trial 
-%                relative to the 0 reference point. 
+% cleanTrl : %   This is a numerical matrix similar to the input inCfg.trl trials definition matrix described above.
+%                It has 3 columns and number of rows equal to number of CLEAN trials that remained after the cleaning performed.
+%                The first column is the start sample, the second is the end sample and time offset of the start of the trial
+%                relative to the 0 reference point.
 %-------------------------------------------------------------
 
 % Copyright (C) 2011-2014 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
@@ -168,9 +168,9 @@ elseif strcmp(badsegmode, 'repnan')
     cfg.artfctdef.all.artifact = badSegments;
     
     origDataNEURO = dataNEURO; % rmfield(dataNEURO, 'trial');
-    if hasELEC
-        origDataELEC = dataRawELEC; % rmfield(dataRawELEC, 'trial');
-    end
+%     if hasELEC
+%         origDataELEC = dataRawELEC; % rmfield(dataRawELEC, 'trial');
+%     end
     
 end
 
@@ -222,6 +222,7 @@ elseif strcmp(badsegmode, 'repnan')
     end % if hasELEC
     
 end
+clear dataRawELEC dataNEURO;
 % =======================================
 cfg = [];
 cfg.demean = 'yes';
@@ -231,11 +232,11 @@ if hasELEC
 end
 if strcmp(badsegmode, 'repnan')
     origDataNEURO = ft_preprocessing(cfg, origDataNEURO);
-    if hasELEC
-        origDataELEC = ft_preprocessing(cfg, origDataELEC);
-    end
+%     if hasELEC
+%         origDataELEC = ft_preprocessing(cfg, origDataELEC);
+%     end
 end
-
+%clear origDataELEC;
 % ===================================================
 % -- Denoise with Reference Sensors --
 cfg = [];
@@ -254,13 +255,13 @@ for iLine = 1:length(lineFreq)
         dataCleanELEC1 = ft_preprocessing(cfg, dataCleanELEC1);
     end
 end
-dataCleanNEURO2 = denDataNEURO;
+dataCleanNEURO2 = denDataNEURO; clear denDataNEURO;
 if hasELEC
-    dataCleanELEC2 = dataCleanELEC1;
+    dataCleanELEC2 = dataCleanELEC1; clear dataCleanELEC1;
 end
 
 % =======================================
-denDataNEURO = dataCleanNEURO2;
+%denDataNEURO = dataCleanNEURO2;
 
 % =======================================
 % --- identify trials that have high std
@@ -280,7 +281,7 @@ if useTrlStd == 1
     denDataNEURO = ft_preprocessing(cfg, dataCleanNEURO2); clear dataCleanNEURO2
     dataCleanELEC2 = ft_preprocessing(cfg, dataCleanELEC2);
 else
-    denDataNEURO = dataCleanNEURO2; clear dataCleanNEURO2
+    denDataNEURO = dataCleanNEURO2; clear dataCleanNEURO2;
 end
 % ======================================
 
@@ -297,20 +298,47 @@ else
     dataNEURO = denDataNEURO; clear denDataNEURO;
 end
 % ==========================================
-if strcmp(badsegmode, 'repnan')
-    [dataNEURO, trlNanFlag] = replaceorigwithnans(origDataNEURO, dataNEURO); clear origDataNEURO;
-    if hasELEC
-        dataCleanELEC2 = replaceorigwithnans(origDataELEC, dataCleanELEC2); clear origDataELEC;
-    end
+% Do resampling
+% -- Resample to 500 Hz
+rscfg = [];
+rscfg.detrend = 'no';
+rscfg.resamplefs = newFs;
+dataNEUROres = ft_resampledata(rscfg, dataNEURO); %clear dataNEURO; % clear data;
+if hasELEC
+    dataCleanELEC2res = ft_resampledata(rscfg, dataCleanELEC2); clear dataCleanELEC2;% clear data;
 end
+
+if strcmp(badsegmode, 'repnan')
+    
+    onechdatorig=ft_selectdata(origDataNEURO,'channel',1);
+    onechdatorigres = ft_resampledata(rscfg, onechdatorig); clear onechdatorig;
+    
+    resOrigStartSamps=round(origDataNEURO.sampleinfo(:,1)./4);
+    resOrigSampsPerTrl=cellfun(@(x) length(x),onechdatorigres.time);
+    resStartSamps=round(dataNEURO.sampleinfo(:,1)./4);
+    resSampsPerTrl=cellfun(@(x) length(x),dataNEUROres.time);
+    
+    onechdatorigres.sampleinfo=[resOrigStartSamps resOrigStartSamps+resOrigSampsPerTrl'-1];
+    dataNEUROres.sampleinfo=[resStartSamps resStartSamps+resSampsPerTrl'-1];
+    
+    [dataNEUROres, trlNanFlag] = replaceorigwithnans(onechdatorigres, dataNEUROres);
+    if hasELEC
+        dataCleanELEC2res.sampleinfo=[resStartSamps resStartSamps+resSampsPerTrl'-1];
+        dataCleanELEC2res = replaceorigwithnans(onechdatorigres, dataCleanELEC2res); clear dataCleanELEC2res;
+    end
+    clear onechdatorigres;
+    
+end
+
+clear dataNEURO origDataNEURO; % clear data;
 % =======================================
 % -- Append ELEC and MEG/EEG
 
 if hasELEC
-    data = ft_appenddata([], dataNEURO, dataCleanELEC2);
-    clear dataCleanELEC2;
+    data = ft_appenddata([], dataNEUROres, dataCleanELEC2res);
+    clear dataCleanELEC2res;
 else
-    data = dataNEURO;
+    data = dataNEUROres;
 end;
 % =======================================
 if strcmp(badsegmode, 'repnan')
@@ -320,17 +348,8 @@ elseif strcmp(badsegmode, 'remfull')
 end
 data.trialinfo = [data.trialinfo addTrlColmn];
 % =======================================
-data.grad = dataNEURO.grad;
-clear dataNEURO;
-
-
-% =====================
-% -- Resample to 500 Hz
-data.fsample = origFs;
-rscfg = [];
-rscfg.detrend = 'no';
-rscfg.resamplefs = newFs;
-data = ft_resampledata(rscfg, data); % clear data;
+data.grad = dataNEUROres.grad;
+clear dataNEUROres;
 
 % =========================
 cleanTrl = data.trialinfo;

@@ -184,8 +184,8 @@ elseif strcmp(cfgin.plottype,'components')
         subplot(2,2,2);
         timeic=cell2mat(comp_freq.time);
         trialic=cell2mat(comp_freq.trial);
-        plot(timeic(1,:),trialic(ix,:));
-        sig = trialic(ix,:);
+        plot(timeic(1,:),trialic(selcomp(ix),:));
+        sig = trialic(selcomp(ix),:);
         base = timeic;
         axis([base(1) base(end) min(sig)-0.1*(max(sig)-min(sig)) max(sig)+0.1*(max(sig)-min(sig))]);
         ylabel(['amplitude']);

@@ -56,7 +56,7 @@ if ~exist('pipelinedatadir', 'var')
 end
 
 if ~exist('aband', 'var')
-    aband=[];
+    aband=[1 2 3 4 5 6 7 8 9];
 end
 
 
@@ -66,9 +66,9 @@ resultprefix = sprintf('%s_%s', experimentid, scanid);
 cd(pipelinedatadir)
 
 % ensure that the output from the previous pipelines is present
-% hcp_check_pipelineoutput('baddata', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
-% hcp_check_pipelineoutput('icaclass', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
-%     hcp_check_pipelineoutput('icamne', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
+hcp_check_pipelineoutput('baddata', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
+hcp_check_pipelineoutput('icaclass', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
+hcp_check_pipelineoutput('icamne', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
 
 % print the matlab and megconnectome version to screen for provenance
 ver('megconnectome')
@@ -89,8 +89,8 @@ end
 % declare the input files
 inputfile1 = fullfile([resultprefix,'_baddata_badsegments.txt']);
 inputfile2 = fullfile([resultprefix,'_baddata_badchannels.txt']);
-inputfile4 = fullfile([resultprefix,'_icaclass_vs.mat']);
-inputfile5 = fullfile([resultprefix,'_icamne.mat']);
+inputfile3 = fullfile([resultprefix,'_icaclass_vs.mat']);
+inputfile4 = fullfile([resultprefix,'_icamne.mat']);
 
 %------------------------
 % declare the output file
@@ -109,41 +109,32 @@ outputfile = [resultprefix,'_icablpenv'];
 % the options: I suggest to create a text file just like the one specifying
 % the badchannels/segments
 
-hcp_read_matlab(inputfile4);
-hcp_read_matlab(inputfile5, 'source');
+hcp_read_matlab(inputfile3);
+hcp_read_matlab(inputfile4, 'source');
 
 comp=comp_class;
 mixing = comp_class.topo;
 if(max(size(source.val))>2)
-for i = 1:size(mixing, 2)
-    mixing(:, i) = mixing(:, i)/source.val(i);
-    for jic=1:size(comp.trial,2)
-        comp.trial{jic}(i,:)=comp.trial{jic}(i,:)*source.val(i);
+    for i = 1:size(mixing, 2)
+        mixing(:, i) = mixing(:, i)/source.val(i);
+        for jic=1:size(comp.trial,2)
+            comp.trial{jic}(i,:)=comp.trial{jic}(i,:)*source.val(i);
+        end
     end
-end
 end
 comp.topo=mixing;
 
-% adjust the time axis to avoid memory problems during resampling:
-% exact time information is discarded anyway
 
-% old_time=comp.time;
-% for k = 1:numel(comp.time)
-%     comp.time{k} = comp.time{k} - comp.time{k}(1);
-% end
-
-if isempty(aband)
-    aband=[1 2 3 4 5 6 7];
-end
-
-blp_bands = [ 1.3 4 ; 3 8 ; 6 15 ; 12.5 28.5 ; 30 75 ; 70 150 ; 1 150];
+blp_bands = [ 1.3 4.5 ; 3 9.5 ; 6.3 16.5 ; 12.5 29 ; 22.5 39 ; 30 55 ;  45 82 ; 70 125 ; 1 150];
 band_prefix={
     'delta'
     'theta'
     'alpha'
-    'beta'
-    'lowgamma'
-    'highgamma'
+    'betalow'
+    'betahigh'
+    'gammalow'
+    'gammamid'
+    'gammahigh'
     'whole'
     };
 
@@ -158,10 +149,13 @@ for ib=aband
     source_blp = hcp_ica_blp(source,comp,options_blp);
     disp('saving icapowenv results')
     
-      hcp_write_matlab([outputfile '_' band_prefix{ib}],'source_blp');
-%       save([outputfile '_' band_prefix{ib}],'source_blp','-v7.3');
-
-    % hcp_check_pipelineoutput('icapowenv', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid, 'sourcemodel', sourcemodel_type, 'band', band_prefix{ib});
+    % save it as a cifti file
+    hcp_write_cifti([outputfile,'_' band_prefix{ib} '.power'],source_blp, 'parameter', 'power', 'type', 'dtseries');
+    
+    % save it as a matlab file as well
+    hcp_write_matlab([outputfile '_' band_prefix{ib}],'source_blp');
+    
+    hcp_check_pipelineoutput('icablpenv', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid, 'band', band_prefix{ib});
     
     clear source_blp;
 end

@@ -1,5 +1,5 @@
 % megconnectome
-% Version 2.1 www.humanconnectome.org 9-Sep-2014
+% Version 2.2 www.humanconnectome.org 10-Nov-2014
 
 % Copyright (C) 2011-2014 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
 %

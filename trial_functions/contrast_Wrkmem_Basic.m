@@ -108,7 +108,7 @@ trialinfo=lockTrl{iTIM};
 %=====================================================================================
 % INDIVIDUAL CONDITIONS - extracting condition trial indices and mnemonic labels -
 %--Case - fixation
-[seltim_fix,labtim_fix]         = trialsplit_Wrkmem(trialinfo, 0,[],[],[],[],[],[],[],[],[]);
+[seltim_FIX,labtim_FIX]         = trialsplit_Wrkmem(trialinfo, 0,[],[],[],[],[],[],[],[],[]);
 %--Case - all images , memory, target types (no settings , default)
 [seltim_allstim,labtim_allstim] = trialsplit_Wrkmem(trialinfo,[],[],[],[],[],[],[],[],[],[]);
 %--Case - OBack
@@ -148,7 +148,7 @@ trialinfo=lockTrl{iTRESP};
 %=====================================================================================
 % INDIVIDUAL CONDITIONS - extracting condition trial indices and mnemonic labels -
 %--Case - fixation
-[seltresp_fix,labtresp_fix]         = trialsplit_Wrkmem(trialinfo, 0,[],[],[],[],[],[],[],[],[]);
+[seltresp_FIX,labtresp_FIX]         = trialsplit_Wrkmem(trialinfo, 0,[],[],[],[],[],[],[],[],[]);
 %--Case - all images , memory, target types (no settings , default)
 [seltresp_allstim,labtresp_allstim] = trialsplit_Wrkmem(trialinfo,[],[],[],[],[],[],[],[],[],[]);
 %--Case - OBack
@@ -224,7 +224,10 @@ Nlm=length(LockModes);
 
 %--- LockMode  'TIM'
 tfavgTimes{1}=[-1:0.025:2]';
-srcTimesFine{1}=[-1:0.025:2]';
+%srcTimesFine{1}=[-1:0.025:2]';
+%srcTimesFine{1}=[fliplr(0:-0.035:-0.8) 0.035:0.035:1.6]';
+%srcTimesFine{1}=[fliplr(0:-0.035:-0.8) 0.035:0.035:1.6]';
+srcTimesFine{1}=[fliplr(0:-0.02:-0.6) 0.02:0.02:1.2]';
 srcTimesCoarseSing{1}=[0 0.5
     0.5 1
     1 1.5
@@ -235,10 +238,11 @@ srcTimesCoarseComp{1}=[-0.5 0
     1 1.5
     1.5 2];
 basePeriod{1}=[-0.5 0];
-
+srcTimesCoarseCompFIX{1}=[-1.5 1.5];
 %--- LockMode  'TRESP'
 tfavgTimes{2}=[-1.25:0.025:1.75]';
-srcTimesFine{2}=[-1.25:0.025:1.75]';
+%srcTimesFine{2}=[-1.25:0.025:1.75]';
+srcTimesFine{2}=[fliplr(0:-0.02:-1.2) 0.02:0.02:0.6]';
 srcTimesCoarseSing{2}=[-0.25 0.25
     0.25 0.75
     0.75 1.25
@@ -249,6 +253,7 @@ srcTimesCoarseComp{2}=[-0.75 -0.25
     0.75 1.25
     1.25 1.75];
 basePeriod{2}=[-0.75 -0.25];
+srcTimesCoarseCompFIX{2}=[-1.5 1.5];
 %=======================================================================
 %=======================================================================
 %=======================================================================
@@ -261,15 +266,15 @@ freqBands={'D','TH','A','Blow','Bhigh','Glow','Gmid','Ghigh'};
 %    'targ' 'nontarg'
 %    'targ' 'lure'
 %    'targ' 'nontarg'};
-tmpSingCases={'0B','2B','face','tool'};
+tmpSingCases={'0B','2B','face','tool','FIX'};
 tmpCompCases={ '0B' '2B'
     'face' 'tool'};
 
 
 for iLM=1:Nlm,
-
-       lmstr=lower(LockModes{iLM}); 
-
+    
+    lmstr=lower(LockModes{iLM});
+    
     for iCase=1:length(tmpSingCases)
         %-- All Stimuli in Trials cut in n
         %-------------------------------------------------------------
@@ -283,6 +288,9 @@ for iLM=1:Nlm,
             'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
             );
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        if strcmp(tmpSingCases{iCase},'FIX'),
+            cntrst(end)=[];
+        end
         %-------------------------------------------------------------
         cntrst{end+1}=newcntrst(...
             'pipeline'     , 'tfavg',...
@@ -290,12 +298,15 @@ for iLM=1:Nlm,
             'mnemtrl'      ,  tmpSingCases(iCase),...
             'freq'         , tfavgFreqs,...
             'baseline'     , {basePeriod{iLM}},... % In tfavg the Baseline is used ONLY FOR PLOTTING
-            'baselinetype' , 'diff',...            % In tfavg the Baseline is used ONLY FOR PLOTTING 
+            'baselinetype' , 'diff',...            % In tfavg the Baseline is used ONLY FOR PLOTTING
             'timeperiods' , {tfavgTimes{iLM}},...
             'selection'    , {eval(['sel',lmstr,'_',tmpSingCases{iCase}])},...
             'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
             );
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        if strcmp(tmpSingCases{iCase},'FIX'),
+            cntrst(end)=[];
+        end
         %-------------------------------------------------------------
         cntrst{end+1}=newcntrst(...
             'pipeline'     , 'srcavglcmv',...
@@ -304,37 +315,63 @@ for iLM=1:Nlm,
             'timeperiods' , {srcTimesFine{iLM}},...
             'baseline'     , {basePeriod{iLM}},...
             'baselinetype' , 'diff',...
+            'invfiltertype', 'avg',...            
             'selection'    , {eval(['sel',lmstr,'_',tmpSingCases{iCase}])},...
             'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
             );
+        if strcmp(tmpSingCases(iCase),'FIX'),
+            cntrst{end}.baseline={[]};
+            cntrst{end}.baselinetype=[];
+            cntrst{end}.invfiltertype='all';            
+            cntrst{end}.timeperiods={[]};
+            %cntrst{end}.timeperiods={srcTimesCoarseCompFIX{1}(1,:)};
+        end
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        % ---For fixation compute also power from pseudo average ERF
+        if strcmp(tmpSingCases(iCase),'FIX'),
+         cntrst{end+1}=cntrst{end};
+         cntrst{end}.invfiltertype='avg';
+        end
+        cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        %-------------------------------------------------------------        
         %-------------------------------------------------------------
+        %{
         cntrst{end+1}=cntrst{end};
         cntrst{end}.baselinetype= 'relch';
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        %}
         %-------------------------------------------------------------
+        %-------------------------------------------------------------
+        cntrst{end+1}=newcntrst(...
+            'pipeline'     , 'srcavgdics',...
+            'lockmode'     , {LockModes{iLM}},...
+            'mnemtrl'      , tmpSingCases(iCase),...
+            'timeperiods'  , {srcTimesFine{iLM}},...
+            'baseline'     , {basePeriod{iLM}},...
+            'baselinetype' , 'diff',...
+            'selection'    , {eval(['sel',lmstr,'_',tmpSingCases{iCase}])},...
+            'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
+            );
+        if strcmp(tmpSingCases{iCase},'FIX'),
+            cntrst{end}.baseline={[]};
+            cntrst{end}.baselinetype=[];
+            cntrst{end}.timeperiods={[]};            
+            %cntrst{end}.timeperiods={srcTimesCoarseCompFIX{1}(1,:)};
+        end
+        cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        %-------------------------------------------------------------
+        %{
+            cntrst{end+1}=cntrst{end};
+            cntrst{end}.baselinetype= 'relch';
+            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        %}
+        %-------------------------------------------------------------
+        
         
         
         for iBand=1:length(freqBands)
             
-            %-------------------------------------------------------------
-            cntrst{end+1}=newcntrst(...
-                'pipeline'     , 'srcavgdics',...
-                'lockmode'     , {LockModes{iLM}},...
-                'mnemtrl'      , tmpSingCases(iCase),...
-                'freqband'     , freqBands{iBand},...
-                'timeperiods'  , {srcTimesFine{iLM}},...
-                'baseline'     , {basePeriod{iLM}},...
-                'baselinetype' , 'diff',...
-                'selection'    , {eval(['sel',lmstr,'_',tmpSingCases{iCase}])},...
-                'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
-                );
-            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
-            %-------------------------------------------------------------
-            cntrst{end+1}=cntrst{end};
-            cntrst{end}.baselinetype= 'relch';
-            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
-            %-------------------------------------------------------------
+            
             cntrst{end+1}=newcntrst(...
                 'pipeline'     , 'tmegconne',...
                 'connemetric'  , 'coh',...
@@ -379,7 +416,7 @@ for iLM=1:Nlm,
     %============================================================
     
     for iGroup=1:size(tmpCompCases,1)
-
+        
         %-------------------------------------------------------------
         cntrst{end+1}=newcntrst(...
             'pipeline'     , 'eravg',...
@@ -405,6 +442,7 @@ for iLM=1:Nlm,
             );
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
         %-------------------------------------------------------------
+        %{
         cntrst{end+1}=newcntrst(...
             'pipeline'     , 'srcavglcmv',...
             'operation'    , 'diff',...
@@ -416,16 +454,20 @@ for iLM=1:Nlm,
             'description'  , {eval(['lab',lmstr,'_',tmpCompCases{iGroup,1}]) eval(['lab',lmstr,'_',tmpCompCases{iGroup,2}])}...
             );
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        %}
         %-------------------------------------------------------------
+        %{
         cntrst{end+1}=cntrst{end};
         cntrst{end}.operation= 'relch';
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        %}
         %-------------------------------------------------------------
         
         
         for iBand=1:length(freqBands)
             
             %-------------------------------------------------------------
+            %{
             cntrst{end+1}=newcntrst(...
                 'pipeline'     , 'srcavgdics',...
                 'operation'    , 'diff',...
@@ -438,10 +480,13 @@ for iLM=1:Nlm,
                 'description'  , {eval(['lab',lmstr,'_',tmpCompCases{iGroup,1}]) eval(['lab',lmstr,'_',tmpCompCases{iGroup,2}])}...
                 );
             cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+            %}
             %-------------------------------------------------------------
+            %{
             cntrst{end+1}=cntrst{end};
             cntrst{end}.operation= 'relch';
             cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+            %}
             %-------------------------------------------------------------
             cntrst{end+1}=newcntrst(...
                 'pipeline'     , 'tmegconne',...
@@ -913,87 +958,87 @@ condcfg.prevTrialResponseTypes=[0 1 2];   %param J % 0.Mistaken 1. Correct  2.Na
     %tmpStimCases={'allstim','0B','2B','face','tool','targ','nontarg','lure'};
     
 end
-    
-    function [contr]=newcntrst(varargin)
-        % This subfunction creates a default cntrst function
-        
-        contr =[];
-        contr.pipeline    = ft_getopt(varargin,'pipeline',[]);
-        %pipelines={'eravg','tfavg','srcavglcmv','srcavgdics','conne'};
-        %----------------------------------------------
-        contr.lockmode    = ft_getopt(varargin,'lockmode',{[]});
-        %for WM datagroups={'TIM','TRESP'};
-        %----------------------------------------------
-        contr.mnemtrl     = ft_getopt(varargin,'mnemtrl',{[]});
-        % Here go mnemonics for each trial selection i.e. {'0B'}
-        %----------------------------------------------
-        contr.freqband    = ft_getopt(varargin,'freqband',[]);
-        % freqBands={'D','TH','A','Blow','Bhigh','Glow','Gmid','Ghigh'};
-        %----------------------------------------------
-        contr.freq       =  ft_getopt(varargin,'freq',[]);
-        % frequencies to be analysed . Currently only used for tfavg pipeline;
-        %----------------------------------------------
-        contr.operation   = ft_getopt(varargin,'operation',[]);
-        % 'diff','rel', or 'relch' This is used when 2 conditions are compared
-        %----------------------------------------------
-        contr.timeperiods = ft_getopt(varargin,'timeperiods',{[]});
-        % This defined the times to be used. If 'all' then the result is
-        % computed for each time point. For each condition the rows indicate
-        % The time points for which the analysis is
-        % performed. If a second column is also
-        % present then the first column is the
-        % lower and the second the upper time
-        % limits within which the analysis should
-        % be performed. i.e. {[-1 -0.5
-        %                       -0.5 0
-        %                       0 0.5]}
-        % Means that the analysis should be
-        % performed for these 3 time windows
-        % How data is integrated in each window is
-        % defined by the .timedef field of the
-        % cntrst
-        %----------------------------------------------
-        contr.timedef     =  ft_getopt(varargin,'timedef',[]);
-        % This how data with a time window should be integrated
-        % It can be 'avg' or 'concat'. If 'avg' then
-        % the data within a window is averaged
-        % before computing the result. If 'concat'
-        % then all the points within the window are
-        % used for the computation
-        %----------------------------------------------
-        contr.baseline    =  ft_getopt(varargin,'baseline',{[]});
-        % This defines the time period to be used as baseline
-        %----------------------------------------------
-        contr.baselinetype= ft_getopt(varargin,'baselinetype',[]);
-        % It can be 'diff','rel' or 'relch' and defines how
-        % the baseline will be used on the rest of the data
-        % When 2 conditions are compared this
-        % defines how baseline has been used in
-        % each condition. In the case of 2
-        % conditions in source space this defines
-        % how baseline has been used in sensor
-        % space to derive the inverse solution.
-        %----------------------------------------------
-        contr.connemetric =  ft_getopt(varargin,'connemetric',[]);
-        % conneCases={'coh','plv','imcoh','psi','powc','orthopowc'}; % Next to be implemented ,'xpowc','xpowphase','bigranger'
-        %----------------------------------------------
-        contr.invfiltertype = ft_getopt(varargin,'invfiltertype',[]);
-        % It can be 'com' or 'ind'. This is used when 2 conditions are compared in source space. If 'com' then a common filter
-        % is derived from both conditions. .If 'ind' the a filter is derived for each condition
-        %----------------------------------------------
-        contr.selection   =  ft_getopt(varargin,'selection',[]);
-        % This is a cell with the indices of the trials to be used
-        %----------------------------------------------
-        contr.description =  ft_getopt(varargin,'description',[]);
-        % This is a cell with basic description of the cntrst (needs to be updated)
-        %----------------------------------------------
-        contr.mnemprint    = ft_getopt(varargin,'mnemprint',[]);
-        % This is the mnemonic that will be used to distinguish the cntrst. Used for saving
-         %================================================================================================
-    end
-    
-    
-    
+
+function [contr]=newcntrst(varargin)
+% This subfunction creates a default cntrst function
+
+contr =[];
+contr.pipeline    = ft_getopt(varargin,'pipeline',[]);
+%pipelines={'eravg','tfavg','srcavglcmv','srcavgdics','conne'};
+%----------------------------------------------
+contr.lockmode    = ft_getopt(varargin,'lockmode',{[]});
+%for WM datagroups={'TIM','TRESP'};
+%----------------------------------------------
+contr.mnemtrl     = ft_getopt(varargin,'mnemtrl',{[]});
+% Here go mnemonics for each trial selection i.e. {'0B'}
+%----------------------------------------------
+contr.freqband    = ft_getopt(varargin,'freqband',[]);
+% freqBands={'D','TH','A','Blow','Bhigh','Glow','Gmid','Ghigh'};
+%----------------------------------------------
+contr.freq       =  ft_getopt(varargin,'freq',[]);
+% frequencies to be analysed . Currently only used for tfavg pipeline;
+%----------------------------------------------
+contr.operation   = ft_getopt(varargin,'operation',[]);
+% 'diff','rel', or 'relch' This is used when 2 conditions are compared
+%----------------------------------------------
+contr.timeperiods = ft_getopt(varargin,'timeperiods',{[]});
+% This defined the times to be used. If 'all' then the result is
+% computed for each time point. For each condition the rows indicate
+% The time points for which the analysis is
+% performed. If a second column is also
+% present then the first column is the
+% lower and the second the upper time
+% limits within which the analysis should
+% be performed. i.e. {[-1 -0.5
+%                       -0.5 0
+%                       0 0.5]}
+% Means that the analysis should be
+% performed for these 3 time windows
+% How data is integrated in each window is
+% defined by the .timedef field of the
+% cntrst
+%----------------------------------------------
+contr.timedef     =  ft_getopt(varargin,'timedef',[]);
+% This how data with a time window should be integrated
+% It can be 'avg' or 'concat'. If 'avg' then
+% the data within a window is averaged
+% before computing the result. If 'concat'
+% then all the points within the window are
+% used for the computation
+%----------------------------------------------
+contr.baseline    =  ft_getopt(varargin,'baseline',{[]});
+% This defines the time period to be used as baseline
+%----------------------------------------------
+contr.baselinetype= ft_getopt(varargin,'baselinetype',[]);
+% It can be 'diff','rel' or 'relch' and defines how
+% the baseline will be used on the rest of the data
+% When 2 conditions are compared this
+% defines how baseline has been used in
+% each condition. In the case of 2
+% conditions in source space this defines
+% how baseline has been used in sensor
+% space to derive the inverse solution.
+%----------------------------------------------
+contr.connemetric =  ft_getopt(varargin,'connemetric',[]);
+% conneCases={'coh','plv','imcoh','psi','powc','orthopowc'}; % Next to be implemented ,'xpowc','xpowphase','bigranger'
+%----------------------------------------------
+contr.invfiltertype = ft_getopt(varargin,'invfiltertype',[]);
+% It can be 'com' or 'ind'. This is used when 2 conditions are compared in source space. If 'com' then a common filter
+% is derived from both conditions. .If 'ind' the a filter is derived for each condition
+%----------------------------------------------
+contr.selection   =  ft_getopt(varargin,'selection',[]);
+% This is a cell with the indices of the trials to be used
+%----------------------------------------------
+contr.description =  ft_getopt(varargin,'description',[]);
+% This is a cell with basic description of the cntrst (needs to be updated)
+%----------------------------------------------
+contr.mnemprint    = ft_getopt(varargin,'mnemprint',[]);
+% This is the mnemonic that will be used to distinguish the cntrst. Used for saving
+%================================================================================================
+end
+
+
+
 function[printMnem]= createcontrmnem(incontr)
 
 pflags=[];
@@ -1030,7 +1075,7 @@ if Nlms==1
         printMnem=[printMnem,'_[',pflags.timedef,incontr.timedef,']'];
     end
     if ~isempty(incontr.baselinetype)
-        if ~strcmp(incontr.pipeline,'tfavg')
+        if (~strcmp(incontr.pipeline,'tfavg'))&(~strcmp(incontr.pipeline,'srcavglcmv'))&(~strcmp(incontr.pipeline,'srcavgdics'))
             printMnem=[printMnem,'_[',pflags.baselinetype,incontr.baselinetype,']'];
         end
     end
@@ -1045,9 +1090,9 @@ elseif Nlms==2
     printMnem=[printMnem,'-',incontr.mnemtrl{1}]; %Here a hyphen is used instead of underscore. The next underscore shoudl be after the trial mnemonic
     printMnem=[printMnem,'-versus'];
     %printMnem=[printMnem,pflags.lockmode,incontr.lockmode{2}]; This was removed as
-                                                                %only contrasts from one
-                                                                %datagroup are
-                                                                %supported
+    %only contrasts from one
+    %datagroup are
+    %supported
     printMnem=[printMnem,'-',incontr.mnemtrl{2},']']; %Here a hyphen is used instead of underscore. The next underscore shoudl be after the trial mnemonic
     if ~isempty(incontr.freqband)
         printMnem=[printMnem,'_[',pflags.freqband,incontr.freqband,']'];

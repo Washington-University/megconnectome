@@ -60,9 +60,10 @@ resultprefix = sprintf('%s_%s', experimentid, scanid);
 % change to the location of the processed data (input and output)
 cd(pipelinedatadir)
 
-% hcp_check_pipelineoutput('baddata', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
-% hcp_check_pipelineoutput('icaclass', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
-% hcp_check_pipelineoutput('anatomy', 'subject', subjectid);
+hcp_check_pipelineoutput('baddata', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
+hcp_check_pipelineoutput('icaclass', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
+hcp_check_pipelineoutput('icaclass_qc', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
+hcp_check_pipelineoutput('anatomy', 'subject', subjectid);
 
 % print the matlab and megconnectome version to screen for provenance
 ver('megconnectome')
@@ -80,7 +81,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 hcp_read_matlab([resultprefix '_icaclass_vs.mat'])
-% comp_class.grad=rmfield(comp_class.grad,'balance');
 
 % read the source and volume conduction model from current dir with
 % outputs of previous pipelines
@@ -94,12 +94,7 @@ sourcemodelsubj = sourcemodel2d;
 hcp_read_matlab(sprintf('%s.mat', [subjectid '_MEG_anatomy_headmodel']));
 headmodel = ft_convert_units(headmodel, 'cm');
 
-mri = ft_read_mri([subjectid '_MEG_anatomy_anatomical.nii']);
-mri=ft_convert_units(mri, 'cm');
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ensure the correct geometrical units
-% sourcemodel = ft_convert_units(sourcemodelsubj, 'mm');
 grad = ft_read_sens(filename);
 gradBalanced = grad;
 gradBalanced = ft_apply_montage(gradBalanced, gradBalanced.balance.Supine, 'keepunused', 'yes', 'inverse', 'yes');
@@ -108,42 +103,26 @@ grad = ft_convert_units(grad, 'cm');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% deal with the component data in order for ft_sourceanalysis to be able to
+% Prepare the component data in order for ft_sourceanalysis to be able to
 % swallow it
-mixing = comp_class.topo;
+mixing   = comp_class.topo;
 channels = comp_class.topolabel;
 % normalisation of the topographies
 for i = 1:size(mixing, 2)
-    val(i) = 0.01*max(abs(mixing(:, i)));
-    mixing(:, i) = mixing(:, i)/val(i);
+  val(i) = 0.01*max(abs(mixing(:, i)));
+  mixing(:, i) = mixing(:, i)/val(i);
 end
-
 
 % create a 'timelock' structure
 tlck = [];
 tlck.label = channels;
-tlck.cov = eye(numel(tlck.label)); % perhaps this one should be scaled
+tlck.cov = eye(numel(tlck.label)); 
 tlck.time=1;
 tlck.grad = grad;
 tlck.dimord = 'chan_time';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% prepare the leadfields: this needs to be done only once:
-% if I understand the method well, each component will be reconstructed by
-% using an MNE with different regularisation
-
-% keep parcel info if present
-if isfield(sourcemodelsubj, 'label')
-    %     parcellation.label = sourcemodelsubj.label;
-    %     parcellation.labelindx = sourcemodelsubj.labelindx;
-    %     parcellation.annotation = sourcemodelsubj.annotation;
-    %     parcellation.ctable = sourcemodelsubj.ctable;
-    parcellation.label = sourcemodelsubj.aparclabel;
-    parcellation.labelindx = sourcemodelsubj.aparc;
-    %     parcellation.annotation = sourcemodelsubj.annotation;
-    %     parcellation.ctable = sourcemodelsubj.ctable;
-end
-
+% compute the forward solution
 
 cfg = [];
 cfg.vol = headmodel;
@@ -155,54 +134,58 @@ cfg.reducerank = 2;
 gridLF = ft_prepare_leadfield(cfg);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% do the source reconstruction. In this case all components are
-% reconstructed using the same amount of regularisation
+% do an MNE with different regularisation for each component
 
-noise_level=8;
+% this parameter is hard-coded here
+noise_level = 8;
 
-cfg = [];
-cfg.method = 'mne';
-cfg.grid = gridLF;
-cfg.vol = headmodel;
-cfg.channel = channels;
+% specify the static part of the cfg for the source reconstruction
+cfg               = [];
+cfg.method        = 'mne';
+cfg.grid          = gridLF;
+cfg.vol           = headmodel;
+cfg.channel       = channels;
 cfg.mne.prewhiten = 'yes';
-cfg.mne.noisecov=eye(numel(channels))*noise_level;
+cfg.mne.noisecov  = eye(numel(channels))*noise_level;
 
-nic=size(mixing,2);
-for i=1:nic
-    tlck.avg = mixing(:,i);
-    
-    mgfp(i)=sqrt(mean((mixing(:,i)-mean(mixing(:,i))).^2));
-    cfg.mne.snr=mgfp(i)/noise_level;
-    
-    noisevec(i)=cfg.mne.snr;
-    
-    tmp = ft_sourceanalysis(cfg, tlck);
-    if i==1
-        source=tmp;
-    else
-        % concatenate the mom here
-        for k = 1:numel(tmp.inside)
-            source.avg.mom{source.inside(k)} = cat(2,source.avg.mom{source.inside(k)}, tmp.avg.mom{source.inside(k)});
-        end
-        source.avg.pow = horzcat(source.avg.pow,tmp.avg.pow);
+% loop over components, due to component-specific regularisation
+for i=1:size(mixing,2)
+
+  % use the channel-level topography of the current component
+  tlck.avg = mixing(:,i);
+  
+  % estimate the snr of the current component
+  cfg.mne.snr = sqrt(mean((mixing(:,i)-mean(mixing(:,i))).^2))/noise_level;
+  noisevec(i) = cfg.mne.snr;
+  
+  tmp = ft_sourceanalysis(cfg, tlck);
+  if i==1
+    % create the output source structure in the first iteration
+    source=tmp;
+  else
+    % concatenate the reconstructed source level topography to the previously computed ones
+    for k = 1:numel(tmp.inside)
+      source.avg.mom{source.inside(k)} = cat(2,source.avg.mom{source.inside(k)}, tmp.avg.mom{source.inside(k)});
     end
-end
-source.val=val;
-source.time=1:size(mixing,2);
-source.noise=noisevec;
-
-
-if(isfield(sourcemodelsubj,'tri')) source.tri=sourcemodelsubj.tri; end
-
-if exist('parcellation', 'var')
-    % store them back in the source structure
-    source.label = parcellation.label;
-    source.labelindx = parcellation.labelindx;
-    %     source.annotation = parcellation.annotation;
+    source.avg.pow = horzcat(source.avg.pow,tmp.avg.pow);
+  end
 end
 
+% add some relevant fields
+source.val  = val;
+source.time = 1:size(mixing,2);
+source.snr  = noisevec;
+if isfield(sourcemodelsubj,'tri'),            source.tri            = sourcemodelsubj.tri;            end
+if isfield(sourcemodelsubj,'brainstructure'), source.brainstructure = sourcemodelsubj.brainstructure; end
+if isfield(sourcemodelsubj,'brainstructurelabel'), source.brainstructurelabel = sourcemodelsubj.brainstructurelabel; end
 
+% save the data as a mat-file
+hcp_write_matlab([resultprefix,'_icamne'],'source');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Plotting and QC is done here
+
+% this is for plotting
 cfgtopo =[];
 cfgtopo.grad=grad;
 cfgtopo.zlim='maxabs';
@@ -222,7 +205,6 @@ xMargin = 1;               %# left/right margins from page borders
 yMargin = 1;               %# bottom/top margins from page borders
 xSize = X - 2*xMargin;     %# figure size on paper (widht & hieght)
 ySize = Y - 2*yMargin;     %# figure size on paper (widht & hieght)
-%     figure('Menubar','none');
 
 
 cfg = [];
@@ -235,10 +217,7 @@ tmp = source;
 for k = 1:numel(source.time)
     tmp.avg.pow = source.avg.pow(:, k);
     tmp.time=source.time(k);
-    %         tmp.avg.mask=zeros(size(tmp.avg.pow));
     maxabs=max(max(max(tmp.avg.pow)));
-    %         indxmask=find(tmp.avg.pow>0.4*maxabs);
-    %         tmp.avg.mask(indxmask)=1;
     imgname = [resultprefix '_icamne_' num2str(k) '.png'];
     
     ft_plot_mesh(tmp,'vertexcolor',tmp.avg.pow)
@@ -268,9 +247,6 @@ for k = 1:numel(source.time)
     hcp_write_figure(imgname, h1)
     close(h1)
 end
-hcp_write_matlab([resultprefix,'_icamne'],'source');
-
-
 
 % ensure that the expected output files were created
-% hcp_check_pipelineoutput('icamne', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
+hcp_check_pipelineoutput('icamne', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);

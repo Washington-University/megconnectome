@@ -259,6 +259,3 @@ clear cfg
 
 % ensure that the expected output files were created
 hcp_check_pipelineoutput('icaclass', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);
-%catch me
-%    save([resultprefix '_montageerror'],'resultprefix')
-%end

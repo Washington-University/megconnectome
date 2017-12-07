@@ -24,6 +24,12 @@
 #   --eravg         include the specific pipeline results
 #   --tfavg         include the specific pipeline results
 #   --powavg        include the specific pipeline results
+#   --icamne        include the specific pipeline results
+#   --icablpenv     include the specific pipeline results
+#   --icablpcorr    include the specific pipeline results
+#   --icaimagcoh    include the specific pipeline results
+#   --srcavglcmv    include the specific pipeline results
+#   --srcavgdics    include the specific pipeline results
 # The default behaviour when none of these options is specified
 # is to include all types of data.
 # 
@@ -86,7 +92,6 @@ function copy {
 raw="true"
 anatomy="true"
 eprime="true"
-
 datacheck="true"
 baddata="true"
 icaclass="true"
@@ -95,6 +100,12 @@ tmegpreproc="true"
 eravg="true"
 tfavg="true"
 powavg="true"
+icamne="true"
+icablpenv="true"
+icablpcorr="true"
+icaimagcoh="true"
+srcavglcmv="true"
+srcavgdics="true"
 
 noise="true"
 restin="true"
@@ -106,10 +117,11 @@ motort="true"
 for ARG in $@
 do
     case $ARG in 
-      --raw | --anatomy | --eprime | --datacheck | --baddata | --icaclass | --rmegpreproc | --tmegpreproc | --eravg | --tfavg | --powavg)
+      --raw | --anatomy | --eprime | --datacheck | --baddata | --icaclass | --rmegpreproc | --tmegpreproc | --eravg | --tfavg | --powavg | --icamne | --icablpenv | --icablpcorr | --icaimagcoh | --srcavglcmv | --srcavgdics)
           # an explicit subselection has been made for the data type
           raw="false"
           anatomy="false"
+          eprime="false"
           datacheck="false"
           baddata="false"
           icaclass="false"
@@ -118,6 +130,12 @@ do
           eravg="false"
           tfavg="false"
           powavg="false"
+          icamne="false"
+          icablpenv="false"
+          icablpcorr="false"
+          icaimagcoh="false"
+          srcavglcmv="false"
+          srcavgdics="false"
           ;;
 
       --noise | --restin | --wrkmem | --storym | --motort)
@@ -201,6 +219,36 @@ do
           shift
           ;;
 
+      --icamne)
+          icamne="true"
+          shift
+          ;;
+
+      --icablpenv)
+          icablpenv="true"
+          shift
+          ;;
+
+      --icablpcorr)
+          icablpcorr="true"
+          shift
+          ;;
+
+      --icaimagcoh)
+          icaimagcoh="true"
+          shift
+          ;;
+
+      --srcavglcmv)
+          srcavglcmv="true"
+          shift
+          ;;
+
+      --srcavgdics)
+          srcavgdics="true"
+          shift
+          ;;
+
        --noise)
           noise="true"
           shift
@@ -281,6 +329,7 @@ echo "inputdir      =" $inputdir
 echo "outputdir     =" $outputdir
 echo "subject       =" $subject
 echo "experiment    =" $experiment
+
 echo "raw           =" $raw
 echo "anatomy       =" $anatomy
 echo "eprime        =" $eprime
@@ -292,6 +341,13 @@ echo "tmegpreproc   =" $tmegpreproc
 echo "eravg         =" $eravg
 echo "tfavg         =" $tfavg
 echo "powavg        =" $powavg
+echo "icamne        =" $icamne
+echo "icablpenv     =" $icablpenv
+echo "icablpcorr    =" $icablpcorr
+echo "icaimagcoh    =" $icaimagcoh
+echo "srcavglcmv    =" $srcavglcmv
+echo "srcavgdics    =" $srcavgdics    
+
 echo "noise         =" $noise
 echo "restin        =" $restin
 echo "wrkmem        =" $wrkmem
@@ -327,7 +383,7 @@ mkdir -p $outputdir/MEG/anatomy/provenance
 mkdir -p $outputdir/MEG/anatomy/figures/provenance
 
 for scan in Rnoise Pnoise Restin Wrkmem StoryM Motort; do
-for pipeline in datacheck baddata icaclass rmegpreproc tmegpreproc eravg tfavg powavg ; do
+for pipeline in datacheck baddata icaclass rmegpreproc tmegpreproc eravg tfavg powavg icamne icablpenv icablpcorr icaimagcoh srcavglcmv srcavgdics; do
 mkdir -p $outputdir/MEG/$scan/$pipeline/provenance
 mkdir -p $outputdir/MEG/$scan/$pipeline/figures/provenance
 done
@@ -341,9 +397,8 @@ rm -f $outputdir/release-notes/MEG.txt
 date                                              >> $outputdir/release-notes/MEG.txt
 cat << EOF                                        >> $outputdir/release-notes/MEG.txt
 
-The following data processing pipelines were executed with megconnectome v1.0
+The following data processing pipelines were executed with megconnectome version 2.0 or 2.1
 -datacheck
--anatomy
 -baddata
 -icaclass
 -rmegpreproc
@@ -352,9 +407,18 @@ The following data processing pipelines were executed with megconnectome v1.0
 -tfavg
 -eravg
 
+The following data processing pipelines were executed with megconnectome version 2.2
+-anatomy
+-icamne
+-icablpenv
+-icablpcorr
+-icaimagcoh
+-srcavglcmv
+-srcavgdics
+
 EOF
 
-cat /HCP/scratch/meg/release-notes/${experiment}  >> $outputdir/release-notes/MEG.txt
+cat /HCP/scratch/meg/release/notes/${experiment}  >> $outputdir/release-notes/MEG.txt
 cat << EOF                                        >> $outputdir/release-notes/MEG.txt
 
 These data were generated and made available by the Human Connectome Project, WU-Minn Consortium (Principal Investigators: David Van Essen and Kamil Ugurbil; 1U54MH091657), which is funded by the 16 NIH Institutes and Centers that support the NIH Blueprint for Neuroscience Research and by the McDonnell Center for Systems Neuroscience at Washington University.
@@ -366,7 +430,7 @@ As a reminder, users of these datasets must comply with the Data Use Terms that 
 EOF
 
 ###################################################################################################
-echo processing raw data ...
+echo packaging raw data ...
 
 if [ $raw = true ] ; then 
 
@@ -425,7 +489,7 @@ fi
 fi
 
 ###################################################################################################
-echo processing anatomy ...
+echo packaging anatomy ...
 
 if [ $anatomy = true ] ; then 
 
@@ -433,6 +497,7 @@ copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_transform.txt        $ou
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_fiducials.txt        $outputdir/MEG/anatomy
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_landmarks.txt        $outputdir/MEG/anatomy
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_headmodel.mat        $outputdir/MEG/anatomy
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.mat $outputdir/MEG/anatomy
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d4mm.mat $outputdir/MEG/anatomy
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d6mm.mat $outputdir/MEG/anatomy
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d8mm.mat $outputdir/MEG/anatomy
@@ -441,18 +506,26 @@ copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_transform.txt.xml       
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_fiducials.txt.xml        $outputdir/MEG/anatomy/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_landmarks.txt.xml        $outputdir/MEG/anatomy/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_headmodel.mat.xml        $outputdir/MEG/anatomy/provenance
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.mat.xml $outputdir/MEG/anatomy/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d4mm.mat.xml $outputdir/MEG/anatomy/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d6mm.mat.xml $outputdir/MEG/anatomy/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d8mm.mat.xml $outputdir/MEG/anatomy/provenance
 
+copy $inputdir/RESOURCES/anatomy/${subject}.L.inflated.4k_fs_LR.surf.gii     $outputdir/MEG/anatomy
+copy $inputdir/RESOURCES/anatomy/${subject}.R.inflated.4k_fs_LR.surf.gii     $outputdir/MEG/anatomy
+copy $inputdir/RESOURCES/anatomy/${subject}.L.midthickness.4k_fs_LR.surf.gii $outputdir/MEG/anatomy
+copy $inputdir/RESOURCES/anatomy/${subject}.R.midthickness.4k_fs_LR.surf.gii $outputdir/MEG/anatomy
+
 for ext in png ; do
 
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_headmodel.$ext         $outputdir/MEG/anatomy/figures
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.$ext $outputdir/MEG/anatomy/figures
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d4mm.$ext $outputdir/MEG/anatomy/figures
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d6mm.$ext $outputdir/MEG/anatomy/figures
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d8mm.$ext $outputdir/MEG/anatomy/figures
 
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_headmodel.$ext.xml         $outputdir/MEG/anatomy/figures/provenance
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.$ext.xml $outputdir/MEG/anatomy/figures/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d4mm.$ext.xml $outputdir/MEG/anatomy/figures/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d6mm.$ext.xml $outputdir/MEG/anatomy/figures/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d8mm.$ext.xml $outputdir/MEG/anatomy/figures/provenance
@@ -462,6 +535,7 @@ done
 fi
 
 ###################################################################################################
+# copy txt/mat/png files
 
 pipeline=()
 if [ $datacheck   = true ]; then pipeline=("${pipeline[@]}" datacheck  ) ; fi
@@ -480,7 +554,7 @@ if [ $wrkmem    = true ]; then scan=("${scan[@]}" Wrkmem       ) ; fi
 if [ $storym    = true ]; then scan=("${scan[@]}" StoryM       ) ; fi
 if [ $motort    = true ]; then scan=("${scan[@]}" Motort       ) ; fi
 
-echo processing processed data for ${pipeline[*]} ${scan[*]} ...
+echo packaging processed data for ${pipeline[*]} ${scan[*]} ...
 
 for s in "${scan[@]}" ; do
 for p in "${pipeline[@]}" ; do
@@ -505,6 +579,50 @@ done
 
 done
 done
+
+###################################################################################################
+# copy nii files
+
+pipeline=()
+if [ $icamne     = true ]; then pipeline=("${pipeline[@]}" icamne    ) ; fi
+if [ $icablpenv  = true ]; then pipeline=("${pipeline[@]}" icablpenv ) ; fi
+if [ $icablpcorr = true ]; then pipeline=("${pipeline[@]}" icablpcorr) ; fi
+if [ $icaimagcoh = true ]; then pipeline=("${pipeline[@]}" icaimagcoh) ; fi
+if [ $srcavglcmv = true ]; then pipeline=("${pipeline[@]}" srcavglcmv) ; fi
+if [ $srcavgdics = true ]; then pipeline=("${pipeline[@]}" srcavgdics) ; fi
+
+scan=()
+if [ $restin    = true ]; then scan=("${scan[@]}" Restin       ) ; fi
+if [ $wrkmem    = true ]; then scan=("${scan[@]}" Wrkmem       ) ; fi
+if [ $storym    = true ]; then scan=("${scan[@]}" StoryM       ) ; fi
+if [ $motort    = true ]; then scan=("${scan[@]}" Motort       ) ; fi
+
+echo packaging source reconstructed data for ${pipeline[*]} ${scan[*]} ...
+
+for s in "${scan[@]}" ; do
+for p in "${pipeline[@]}" ; do
+
+for ext in nii ; do
+for file in $inputdir/RESOURCES/?meg/*"$s"_"$p"*."$ext" ; do 
+copy "$file" $outputdir/MEG/$s/$p/
+done
+for file in $inputdir/RESOURCES/?meg/*"$s"_"$p"*."$ext".xml ; do 
+copy "$file" $outputdir/MEG/$s/$p/provenance
+done
+done
+
+for ext in png ; do
+for file in $inputdir/RESOURCES/?meg/*"$s"_"$p"*."$ext" ; do 
+copy "$file" $outputdir/MEG/$s/$p/figures/
+done
+for file in $inputdir/RESOURCES/?meg/*"$s"_"$p"*."$ext".xml ; do 
+copy "$file" $outputdir/MEG/$s/$p/figures/provenance/
+done
+done
+
+done
+done
+
 
 ###################################################################################################
 echo cleaning up empty directories ...

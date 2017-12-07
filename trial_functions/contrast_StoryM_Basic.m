@@ -252,6 +252,7 @@ for iCase=1:length(tmpSingCases)
     cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
     %-------------------------------------------------------------
     %-------------------------------------------------------------
+    %{
     cntrst{end+1}=newcntrst(...
         'pipeline'     , 'srcavglcmv',...
         'lockmode'     , {LockModes{iLM}},...
@@ -267,7 +268,9 @@ for iCase=1:length(tmpSingCases)
     cntrst{end+1}=cntrst{end};
     cntrst{end}.baselinetype= 'relch';
     cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+    %}
     %-------------------------------------------------------------
+    %{
     for iBand=1:length(freqBands)
         
         %-------------------------------------------------------------
@@ -323,8 +326,13 @@ for iCase=1:length(tmpSingCases)
         cntrst{end}.connemetric= 'orthopowc';
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
         %-------------------------------------------------------------
+    
     end
+    %}
 end
+%====================================================================
+%====================================================================
+%====================================================================
 
 %====================================================================
 % COMPARISONS
@@ -369,6 +377,7 @@ for iGroup=1:size(tmpCompCases,1)
         );
     cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
     %-------------------------------------------------------------
+    %{
     cntrst{end+1}=newcntrst(...
         'pipeline'     , 'srcavglcmv',...
         'operation'    , 'diff',...
@@ -384,9 +393,10 @@ for iGroup=1:size(tmpCompCases,1)
     cntrst{end+1}=cntrst{end};
     cntrst{end}.operation= 'relch';
     cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+    %}
     %-------------------------------------------------------------
     
-    
+    %{
     for iBand=1:length(freqBands)
         
         %-------------------------------------------------------------
@@ -445,7 +455,7 @@ for iGroup=1:size(tmpCompCases,1)
         
         %====================================================================
     end
-    
+    %}
 end
 
 %====================================================================
@@ -489,6 +499,7 @@ for iCase=1:length(tmpSingCases)
     cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
     %-------------------------------------------------------------
     %-------------------------------------------------------------
+    %{
     cntrst{end+1}=newcntrst(...
         'pipeline'     , 'srcavglcmv',...
         'lockmode'     , {LockModes{iLM}},...
@@ -504,7 +515,9 @@ for iCase=1:length(tmpSingCases)
     cntrst{end+1}=cntrst{end};
     cntrst{end}.baselinetype= 'relch';
     cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+    %}
     %-------------------------------------------------------------
+    %{
     for iBand=1:length(freqBands)
         
         %-------------------------------------------------------------
@@ -561,6 +574,7 @@ for iCase=1:length(tmpSingCases)
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
         %-------------------------------------------------------------
     end
+    %}
 end
 
 %====================================================================
@@ -575,6 +589,9 @@ end
 %- datagroup BSENT
 %----  No single conditions
 %----  only comparisons
+
+%{
+
 iLM=3;
 lmstr=lower(LockModes{iLM});
 
@@ -668,7 +685,7 @@ for iGroup=1:size(tmpCompCases,1)
     end
     
 end
-
+%}
 %====================================================================
 %==================================================================
 %====================================================================
@@ -678,8 +695,54 @@ end
 
 %====================================================================
 %- datagroup BU
-%----  No single conditions
-%----  only comparisons
+%----   single conditions
+
+tmpSingCases={'stor','math'};
+iLM=4;
+lmstr=lower(LockModes{iLM});
+
+for iCase=1:length(tmpSingCases)
+    
+    
+    %-------------------------------------------------------------
+    %-------------------------------------------------------------
+    
+    cntrst{end+1}=newcntrst(...
+        'pipeline'     , 'srcavglcmv',...
+        'lockmode'     , {LockModes{iLM}},...
+        'mnemtrl'      , tmpSingCases(iCase),...
+        'timeperiods'  , {[]},...
+        'baseline'     , {[]},...
+        'baselinetype' , [],...        
+        'selection'    , {eval(['sel',lmstr,'_',tmpSingCases{iCase}])},...
+        'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
+        );
+    cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+    %-------------------------------------------------------------
+    %-------------------------------------------------------------
+    
+
+        
+        %-------------------------------------------------------------
+        cntrst{end+1}=newcntrst(...
+            'pipeline'     , 'srcavgdics',...
+            'lockmode'     , {LockModes{iLM}},...
+            'mnemtrl'      , tmpSingCases(iCase),...
+            'timeperiods'  , {[]},...
+            'baseline'     , {[]},...
+            'baselinetype' , [],...
+            'selection'    , {eval(['sel',lmstr,'_',tmpSingCases{iCase}])},...
+            'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
+            );
+        cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        %-------------------------------------------------------------
+end
+
+
+%==================================================================
+%====================================================================
+
+%{
 iLM=4;
 lmstr=lower(LockModes{iLM});
 
@@ -772,7 +835,7 @@ for iGroup=1:size(tmpCompCases,1)
     end
     
 end
-
+%}
 %==================================================================
 
 

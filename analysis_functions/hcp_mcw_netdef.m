@@ -35,6 +35,7 @@ label{1}='preCunPC' ;  hemi{1}='L';
 label{2}='mPFC2';      hemi{2}='L';    
 label{3}='AG';         hemi{3}='R';
 label{4}='AG';         hemi{4}='L';
+emcw_order=[1 2 3 ; 2 3 4 ; 3 2 1 ; 4 2 3];
 net_name={'a3_Default_mode'};
 par_name={'L_G_pariet_inf-Angular'};
 
@@ -44,6 +45,7 @@ label{1}='pIPS-SPL' ;   hemi{1}='L';
 label{2}='pIPS-SPL';    hemi{2}='R';    
 label{3}='FEF';         hemi{3}='L';
 label{4}='FEF';         hemi{4}='R';
+emcw_order=[1 3 4 ; 2 3 4 ; 3 1 2 ; 4 1 2];
 net_name={'a15_Dorsal_attention'};
 
 
@@ -55,9 +57,11 @@ label{3}='S2';    hemi{3}='L';
 label{4}='vCS';   hemi{4}='R'; % this is not exactly the same as the previous implementation
 % label{4}='vPoCe';   hemi{4}='R'; % this is not exactly the same as the previous implementation
 % label{4}='mI2';   hemi{4}='R'; % this is not exactly the same as the previous implementation
-net_name={'a4_"Hand"_somatosensory-motor' 'a16_"Mouth"_somatosensory-motor'};
+% net_name={'a4_"Hand"_somatosensory-motor' 'a16_"Mouth"_somatosensory-motor'};
+emcw_order=[1 2 4 ; 2 1 3 ; 3 2 4 ; 4 1 3];
+net_name={'a4_"Hand"_somatosensory-motor'};
 
-elseif(strcmp(net,'VIS'))
+elseif(strcmp(net,'VIS')) %fake implementation for MCW! To be done in the case
 %'DMN'   
 label{1}='CS' ;   hemi{1}='L';
 label{2}='CS';    hemi{2}='R';    
@@ -65,9 +69,10 @@ label{3}='S2';    hemi{3}='L';
 label{4}='vCS';   hemi{4}='R'; % this is not exactly the same as the previous implementation
 % label{4}='vPoCe';   hemi{4}='R'; % this is not exactly the same as the previous implementation
 % label{4}='mI2';   hemi{4}='R'; % this is not exactly the same as the previous implementation
+emcw_order=[1 3 4 ; 2 3 4 ; 3 1 2 ; 4 1 2];
 net_name={'a5_Visual'};
 
-elseif(strcmp(net,'AUD'))
+elseif(strcmp(net,'AUD')) %fake implementation for MCW! To be done in the case
 %'DMN'   
 label{1}='CS' ;   hemi{1}='L';
 label{2}='CS';    hemi{2}='R';    
@@ -75,6 +80,7 @@ label{3}='S2';    hemi{3}='L';
 label{4}='vCS';   hemi{4}='R'; % this is not exactly the same as the previous implementation
 % label{4}='vPoCe';   hemi{4}='R'; % this is not exactly the same as the previous implementation
 % label{4}='mI2';   hemi{4}='R'; % this is not exactly the same as the previous implementation
+emcw_order=[1 3 4 ; 2 3 4 ; 3 1 2 ; 4 1 2];
 net_name={'a24_Auditory'};
 end
 
@@ -469,6 +475,7 @@ net_seeds.seeds_string{5}=['out' '-' 'seed'];
 net_seeds.hemi=hemi;
 net_seeds.label=label;
 net_seeds.net_name=net_name;
+net_seeds.emcw_order=emcw_order;
 % net_seeds.par_name=par_name;
 end
 

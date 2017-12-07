@@ -122,7 +122,7 @@ Nlm=length(LockModes);
 
 %--- LockMode  'TFLASH'
 tfavgTimes{1}=[-1.2:0.025:1.2]';
-srcTimesFine{1}=[-1.2:0.01:1.2]';
+srcTimesFine{1}=[fliplr(0:-0.02:-0.8) 0.02:0.02:0.8]';
 srcTimesCoarseSing{1}=[0 0.3
     0.3 0.6
     0.6 0.9];
@@ -130,16 +130,13 @@ srcTimesCoarseComp{1}=[-0.3 0
     0 0.3
     0.3 0.6
     0.6 0.9];
-srcTimesCoarseCompFIX{1}=[0 0.3
-    0 0.3
-    0 0.3
-    0 0.3];
+srcTimesCoarseCompFIX{1}=[0 1.2];
 basePeriod{1}=[-0.3 0];
 
 if hasEMG
     %--- LockMode  'TEMG'
     tfavgTimes{2}=[-1.2:0.025:1.2]';
-    srcTimesFine{2}=[-1.2:0.025:1.2]';
+    srcTimesFine{2}=[fliplr(0:-0.02:-0.8) 0.02:0.02:0.8]';
     srcTimesCoarseSing{2}=[0 0.3
         0.3 0.6
         0.6 0.9];
@@ -147,10 +144,7 @@ if hasEMG
         0 0.3
         0.3 0.6
         0.6 0.9];
-    srcTimesCoarseCompFIX{2}=[0 0.3
-        0 0.3
-        0 0.3
-        0 0.3];
+    srcTimesCoarseCompFIX{2}=[0 1.2];
     basePeriod{2}=[-0.3 0];
 end
 %=======================================================================
@@ -158,8 +152,10 @@ end
 %=======================================================================
 %=======================================================================
 tfavgFreqs=[1:100];
-freqBands={'D','TH','A','Blow','Bhigh','Glow','Gmid','Ghigh'};
-tmpSingCases={'LH','RH','LF','RF'};
+
+freqBandsCoarse={'D','TH','A','Blow','Bhigh','Glow','Gmid','Ghigh'};
+freqBandsFine={'D1','D2','TH1','TH2','A1','A2','A3','B1','B2','B3','B4','G1','G2','G3','G4','G5','G6','G7'};
+tmpSingCases={'LH','RH','LF','RF','FIX'};
 tmpCompCases={ 'LH' 'FIX'
     'RH' 'FIX'
     'LF' 'FIX'
@@ -182,6 +178,9 @@ for iLM=1:Nlm,
             'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
             );
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        if strcmp(tmpSingCases{iCase},'FIX'),
+            cntrst(end)=[];
+        end
         %-------------------------------------------------------------
         cntrst{end+1}=newcntrst(...
             'pipeline'     , 'tfavg',...
@@ -195,6 +194,9 @@ for iLM=1:Nlm,
             'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
             );
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        if strcmp(tmpSingCases{iCase},'FIX'),
+            cntrst(end)=[];
+        end        
         %-------------------------------------------------------------
         if hasEMG
             % Quick way of defining the computation of corticomuscular
@@ -203,7 +205,7 @@ for iLM=1:Nlm,
             % the highest coherence.
             cntrst{end+1}=newcntrst(...
                 'pipeline'     , 'tfavg',...
-                'connemetric' , 'emgcoh',... % SPECIAL CASE - in tfavg only coherence with emg is computed to get an idea of the band of coherency 
+                'connemetric' , 'emgcoh',... % SPECIAL CASE - in tfavg only coherence with emg is computed to get an idea of the band of coherency
                 'lockmode'     ,  {LockModes{iLM}},...
                 'mnemtrl'      ,  tmpSingCases(iCase),...
                 'freq'         , tfavgFreqs,...
@@ -212,6 +214,9 @@ for iLM=1:Nlm,
                 'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
                 );
             cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        if strcmp(tmpSingCases{iCase},'FIX'),
+            cntrst(end)=[];
+        end               
         end
         %-------------------------------------------------------------
         cntrst{end+1}=newcntrst(...
@@ -221,34 +226,84 @@ for iLM=1:Nlm,
             'timeperiods'  , {srcTimesFine{iLM}},...
             'baseline'     , {basePeriod{iLM}},...
             'baselinetype' , 'diff',...
+            'invfiltertype', 'avg',...
             'selection'    , {eval(['sel',lmstr,'_',tmpSingCases{iCase}])},...
             'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
             );
+        if strcmp(tmpSingCases(iCase),'FIX'),
+            cntrst{end}.baseline={[]};
+            cntrst{end}.baselinetype=[];
+            cntrst{end}.invfiltertype='all';
+            %cntrst{end}.timeperiods={srcTimesCoarseCompFIX{1}(1,:)};
+            cntrst{end}.timeperiods={[]};
+        end
+        
+        cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        % ---For fixation compute also power from pseudo average ERF
+        if strcmp(tmpSingCases(iCase),'FIX'),
+         cntrst{end+1}=cntrst{end};
+         cntrst{end}.invfiltertype='avg';
+        end
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
         %-------------------------------------------------------------
+        %{
         cntrst{end+1}=cntrst{end};
         cntrst{end}.baselinetype= 'relch';
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        %}
         %-------------------------------------------------------------
-        for iBand=1:length(freqBands)
+        
+        
+        %-------------------------------------------------------------
+        cntrst{end+1}=newcntrst(...
+            'pipeline'     , 'srcavgdics',...
+            'lockmode'     , {LockModes{iLM}},...
+            'mnemtrl'      , tmpSingCases(iCase),...
+            'timeperiods'  , {srcTimesFine{iLM}},...
+            'baseline'     , {basePeriod{iLM}},...
+            'baselinetype' , 'diff',...
+            'selection'    , {eval(['sel',lmstr,'_',tmpSingCases{iCase}])},...
+            'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
+            );
+        %'freqband'     , freqBandsCoarse{iBand},...
+        if strcmp(tmpSingCases{iCase},'FIX'),        
+            cntrst{end}.baseline={[]};
+            cntrst{end}.baselinetype=[];
+            %cntrst{end}.timeperiods={srcTimesCoarseCompFIX{1}(1,:)};
+            cntrst{end}.timeperiods={[]};
             
-            %-------------------------------------------------------------
+        end
+        cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+
+        %-------------------------------------------------------------
+        if hasEMG
             cntrst{end+1}=newcntrst(...
                 'pipeline'     , 'srcavgdics',...
+                'connemetric' , 'emgcoh',...
                 'lockmode'     , {LockModes{iLM}},...
                 'mnemtrl'      , tmpSingCases(iCase),...
-                'freqband'     , freqBands{iBand},...
                 'timeperiods'  , {srcTimesFine{iLM}},...
-                'baseline'     , {basePeriod{iLM}},...
-                'baselinetype' , 'diff',...
+                'baseline'     , {[]},...
+                'baselinetype' , [],...
                 'selection'    , {eval(['sel',lmstr,'_',tmpSingCases{iCase}])},...
                 'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
                 );
+            %'freqband'     , freqBandsCoarse{iBand},...
             cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
-            %-------------------------------------------------------------
+        if strcmp(tmpSingCases{iCase},'FIX'),
+           cntrst(end)=[];            
+        end              
+        end
+     
+        
+        
+        %-------------------------------------------------------------
+        %{
             cntrst{end+1}=cntrst{end};
             cntrst{end}.baselinetype= 'relch';
             cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+        %}
+        for iBand=1:length(freqBandsCoarse)
             %-------------------------------------------------------------
             if hasEMG
                 cntrst{end+1}=newcntrst(...
@@ -256,7 +311,7 @@ for iLM=1:Nlm,
                     'connemetric' , 'emgcoh',...
                     'lockmode'     , {LockModes{iLM}},...
                     'mnemtrl'      , tmpSingCases(iCase),...
-                    'freqband'     , freqBands{iBand},...
+                    'freqband'     , freqBandsCoarse{iBand},...
                     'timeperiods'  , {tfavgTimes{iLM}},...
                     'timedef'      , 'concat',...
                     'selection'    , {eval(['sel',lmstr,'_',tmpSingCases{iCase}])},...
@@ -270,7 +325,7 @@ for iLM=1:Nlm,
                 'connemetric' , 'coh',...
                 'lockmode'     , {LockModes{iLM}},...
                 'mnemtrl'      , tmpSingCases(iCase),...
-                'freqband'     , freqBands{iBand},...
+                'freqband'     , freqBandsCoarse{iBand},...
                 'timeperiods'  , {srcTimesCoarseSing{iLM}},...
                 'timedef'      , 'concat',...
                 'baseline'     , {basePeriod{iLM}},...
@@ -348,6 +403,7 @@ for iLM=1:Nlm,
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
         %}
         %-------------------------------------------------------------
+        %{
         cntrst{end+1}=newcntrst(...
             'pipeline'     , 'srcavglcmv',...
             'operation'    , 'diff',...
@@ -364,17 +420,17 @@ for iLM=1:Nlm,
         cntrst{end}.operation= 'relch';
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
         %-------------------------------------------------------------
+        %}
         
-        
-        for iBand=1:length(freqBands)
-            
+        for iBand=1:length(freqBandsCoarse)
+            %{
             %-------------------------------------------------------------
             cntrst{end+1}=newcntrst(...
                 'pipeline'     , 'srcavgdics',...
                 'operation'    , 'diff',...
                 'lockmode'     , {LockModes{iLM} LockModes{iLM}},...
                 'mnemtrl'      , tmpCompCases(iGroup,:),...
-                'freqband'     , freqBands{iBand},...
+                'freqband'     , freqBandsCoarse{iBand},...
                 'timeperiods'  , {srcTimesCoarseComp{iLM}    srcTimesCoarseCompFIX{iLM}},...
                 'invfiltertype', 'ind',...
                 'selection'    , {eval(['sel',lmstr,'_',tmpCompCases{iGroup,1}]) eval(['sel',lmstr,'_',tmpCompCases{iGroup,2}])},...
@@ -385,6 +441,7 @@ for iLM=1:Nlm,
             cntrst{end+1}=cntrst{end};
             cntrst{end}.operation= 'relch';
             cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+            %}
             %-------------------------------------------------------------
             cntrst{end+1}=newcntrst(...
                 'pipeline'     , 'tmegconne',...
@@ -392,7 +449,7 @@ for iLM=1:Nlm,
                 'operation'    , 'diff',...
                 'lockmode'     , {LockModes{iLM} LockModes{iLM}},...
                 'mnemtrl'      , tmpCompCases(iGroup,:),...
-                'freqband'     , freqBands{iBand},...
+                'freqband'     , freqBandsCoarse{iBand},...
                 'timeperiods'  , {srcTimesCoarseComp{iLM}    srcTimesCoarseCompFIX{iLM}},...
                 'timedef'      , 'concat',...
                 'invfiltertype', 'ind',...
@@ -427,7 +484,7 @@ for iLM=1:Nlm,
         
     end
     
-   
+    
     
     
 end
@@ -557,7 +614,7 @@ contr.mnemtrl     = ft_getopt(varargin,'mnemtrl', {[]});
 % Here go mnemonics for each trial selection i.e. {'0B'}
 %----------------------------------------------
 contr.freqband    = ft_getopt(varargin,'freqband',[]);
-% freqBands={'D','TH','A','Blow','Bhigh','Glow','Gmid','Ghigh'};
+% freqBandsCoarse={'D','TH','A','Blow','Bhigh','Glow','Gmid','Ghigh'};
 %----------------------------------------------
 contr.freq       =  ft_getopt(varargin,'freq',[]);
 % frequencies to be analysed . Currently only used for tfavg pipeline;
@@ -658,9 +715,9 @@ if Nlms==1
         printMnem=[printMnem,'_[',pflags.timedef,incontr.timedef,']'];
     end
     if ~isempty(incontr.baselinetype)
-          if ~strcmp(incontr.pipeline,'tfavg')
-              printMnem=[printMnem,'_[',pflags.baselinetype,incontr.baselinetype,']'];
-          end
+        if (~strcmp(incontr.pipeline,'tfavg'))&(~strcmp(incontr.pipeline,'srcavglcmv'))&(~strcmp(incontr.pipeline,'srcavgdics'))
+            printMnem=[printMnem,'_[',pflags.baselinetype,incontr.baselinetype,']'];
+        end
     end
     if ~isempty(incontr.connemetric)
         printMnem=[printMnem,'_[',pflags.connemetric,incontr.connemetric,']'];
@@ -673,9 +730,9 @@ elseif Nlms==2
     printMnem=[printMnem,'-',incontr.mnemtrl{1}]; %Here a hyphen is used instead of underscore. The next underscore shoudl be after the trial mnemonic
     printMnem=[printMnem,'-versus'];
     %printMnem=[printMnem,pflags.lockmode,incontr.lockmode{2}]; This was removed as
-                                                                %only contrasts from one
-                                                                %datagroup are
-                                                                %supported
+    %only contrasts from one
+    %datagroup are
+    %supported
     printMnem=[printMnem,'-',incontr.mnemtrl{2},']']; %Here a hyphen is used instead of underscore. The next underscore shoudl be after the trial mnemonic
     if ~isempty(incontr.freqband)
         printMnem=[printMnem,'_[',pflags.freqband,incontr.freqband,']'];

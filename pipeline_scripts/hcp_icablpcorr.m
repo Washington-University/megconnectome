@@ -47,10 +47,6 @@ if ~exist('experimentid', 'var')
     experimentid = tok{end-5};
 end
 
-% if ~exist('scanid', 'var')
-%     scanid = tok{end-3};
-% end
-
 scanid={'3-Restin' ; '4-Restin' ; '5-Restin'};
 
 if ~exist('pipelinedatadir', 'var')
@@ -58,24 +54,24 @@ if ~exist('pipelinedatadir', 'var')
 end
 
 if ~exist('aband', 'var')
-    aband=[1 2 3 4 5 6 7];
+    aband=[1 2 3 4 5 6 7 8 9];
 end
 
 % print the matlab and megconnectome version to screen for provenance
 ver('megconnectome')
 
-% % print the value of all local variables to screen for provenance
-% w = whos;
-% w = {w.name};
-% w = setdiff(w, {'w', 'ans'});
-% for i=1:length(w)
-%     fprintf(hcp_printstruct(w{i}, eval(w{i})));
-% end
+% print the value of all local variables to screen for provenance
+w = whos;
+w = {w.name};
+w = setdiff(w, {'w', 'ans'});
+for i=1:length(w)
+    fprintf(hcp_printstruct(w{i}, eval(w{i})));
+end
 
 % change to the location of the processed data (input and output)
 cd(pipelinedatadir)
 
-% hcp_check_pipelineoutput('anatomy', 'subject', subjectid);
+hcp_check_pipelineoutput('anatomy', 'subject', subjectid);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % execute the pipeline
@@ -83,124 +79,96 @@ cd(pipelinedatadir)
 
 hcp_read_matlab([subjectid '_MEG_anatomy_sourcemodel_2d']);
 sourcemodelsubj = sourcemodel2d;
-head=ft_read_headshape([subjectid '.L.midthickness.8k_fs_LR.surf.gii']);
-head2=ft_read_headshape([subjectid '.R.midthickness.8k_fs_LR.surf.gii']);
+head=ft_read_headshape([subjectid '.L.midthickness.4k_fs_LR.surf.gii']);
+head2=ft_read_headshape([subjectid '.R.midthickness.4k_fs_LR.surf.gii']);
 sourcemodel=head;
 sourcemodel.pnt=[head.pnt ; head2.pnt];
 sourcemodel.tri=[head.tri ; head2.tri];
 
 
-blp_bands = [ 1.3 4 ; 3 8 ; 6 15 ; 12.5 28.5 ; 30 75 ; 70 150 ; 1 150];
 band_prefix={
     'delta'
     'theta'
     'alpha'
-    'beta'
-    'lowgamma'
-    'highgamma'
+    'betalow'
+    'betahigh'
+    'gammalow'
+    'gammamid'
+    'gammahigh'
     'whole'
     };
 
-window_corr=25; %window for stationary corr in sec
-Fs=50;
+
+window_corr=25; % window for stationary corr in sec
+Fs=50; % BLP sampling frequency in Hz
 window_corr2=window_corr*Fs;
 source_blp=[];
+r_dist=3.5; % radius of the mask related to the vertices euclidean distance
 for ib=aband
     nwin_tot=0;
     for i_scan=1:3
         clear source_blp
         
-        resultprefix = sprintf('%s_%s', experimentid, scanid{i_scan});
+        % check whether the band-limited power envelope time courses exist
+        hcp_check_pipelineoutput('icablpenv', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid{i_scan}, 'band', band_prefix{ib});
         
-        outputfile=[experimentid '_blpcorr_' band_prefix{ib}];
-        
-        %     hcp_check_pipelineoutput('icapowenv', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid,'band',band_prefix{ib});
-        outstr=[resultprefix '_icablpenv_' band_prefix{ib}];
+        % load the data
+        outstr = sprintf('%s_%s_icablpenv_%s', experimentid, scanid{i_scan}, band_prefix{ib});
         disp(['loading blp file ' outstr])
-        hcp_read_matlab([resultprefix '_icablpenv_' band_prefix{ib}])
-        %         hcp_read_matlab([resultprefix '_blp_2D_' band_prefix{ib}])
-        
+        hcp_read_matlab(outstr)
         
         if (i_scan==1)
+            % allocate memory for the connectivity matrix in the first iteration for the first scan
             connect_stat=zeros(size(source_blp.power,1));
         end
         ntp=size(source_blp.power,2);
-        nwin=floor(ntp/(Fs*window_corr))
+        nwin=floor(ntp/(Fs*window_corr));
+        
+        % compute a running sum
         for i=1:nwin
             vect=[((i-1)*window_corr2)+1:window_corr2*i];
             connect_stat=corr(source_blp.power(:,vect)')+connect_stat;
-        end
+        end % for each window
         nwin_tot=nwin_tot+nwin;
-    end
+    end % for each resting-state scan
     
-    connect_stat=connect_stat/nwin_tot;
-    connect_stat = cast(connect_stat,'single');
+    % normalise with the number of windows and cast to single precision
+    connect_stat = connect_stat/nwin_tot;
     
-    atlas_rsn_l=ft_read_atlas('RSN-networks.L.8k_fs_LR.label.gii');
-    atlas_rsn_r=ft_read_atlas('RSN-networks.R.8k_fs_LR.label.gii');
-    indxvoxels=[];
-    jn=0;
-    for in=3:numel(atlas_rsn_r.parcellation4label)
-        jn=jn+1;
-        networkl{jn}=atlas_rsn_r.parcellation4label{in};
-        nindxl=find(strcmp(atlas_rsn_l.parcellation4label,atlas_rsn_r.parcellation4label{in}));
-        if ~isempty(nindxl)
-            indxvoxels=[indxvoxels ; find(atlas_rsn_l.parcellation4==nindxl)];
-            indxvoxels_net{jn}=find(atlas_rsn_l.parcellation4==nindxl);
-        end
-        indxvoxels=[indxvoxels ; (find(atlas_rsn_r.parcellation4==in)+numel(atlas_rsn_l.parcellation4))];
-        indxvoxels_net{jn}=[indxvoxels_net{jn} ; (find(atlas_rsn_r.parcellation4==in)+numel(atlas_rsn_l.parcellation4))];
-        label_net_n{jn}=atlas_rsn_r.parcellation4label{in};
-        if (jn==1)
-            net_max(jn,:)=[1 numel(indxvoxels)];
-        else
-            net_max(jn,:)=[(net_max(jn-1,2)+1) numel(indxvoxels)];
-        end
-    end
+    % create the output structure
+    connect.pos      = source_blp.pos;
+    connect.dimord   = 'pos_pos';
+    connect.blpcorr  = connect_stat;
+    connect.blp_band = source_blp.blp_band;
+    if isfield(source_blp, 'tri'), connect.tri = source_blp.tri; end
+    if isfield(source_blp, 'brainstructure'), connect.brainstructure = source_blp.brainstructure; end
+    if isfield(source_blp, 'brainstructurelabel'), connect.brainstructurelabel = source_blp.brainstructurelabel; end
     
-    netmean_eval='yes';
-    if(strcmp(netmean_eval,'yes'))
-        for imean=1:numel(indxvoxels_net)
-            net_pos=source_blp.pos(indxvoxels_net{imean},:);
-            eudist=squareform(pdist(net_pos));
-            mask_c=find(eudist<3.5);
-            net_matrix=connect_stat(indxvoxels_net{imean},indxvoxels_net{imean});
-            net_matrix_v=net_matrix;
-            net_matrix_v(mask_c)=[];
-            net_corr.mean(imean)=mean(net_matrix_v);
-            net_corr.label{imean}=label_net_n{imean};
-            net_matrix(mask_c)=NaN;
-            h=imagesc(net_matrix);
-            set(h,'alphadata',~isnan(net_matrix))
-            caxis([0 1]); colorbar
-            imgname = [outputfile '_' label_net_n{imean} '.png'];
-            imgname=strrep(imgname,'"','');
-            hcp_write_figure(imgname, gcf)
-            
-            close all
-        end
-        connect.net_corr=net_corr;
-            hcp_write_matlab([outputfile '_mean'],'net_corr')
-
-    end
-
+    % save it as a cifti
+    outputfile   = [experimentid '_Restin_icablpcorr_' band_prefix{ib} '.blpcorr'];
+    hcp_write_cifti(outputfile, connect, 'parameter', 'blpcorr', 'type', 'dconn');
     
-    connect.networkl=networkl;
-    connect.connect_stat=connect_stat;
-    connect.net_extr=net_max;
-    connect.indxvoxels=indxvoxels;
-    hcp_write_matlab(outputfile,'connect')
+    % also save it as a matlab file
+    hcp_write_matlab(outputfile,'connect');
     
     dofig='yes';
     if strcmp(dofig,'yes')
-        figure
-        imagesc(connect_stat(indxvoxels,indxvoxels));
-        caxis([0.5 1])
-        colorbar
-        imgname = [outputfile '.png'];
-        hcp_write_figure(imgname, gcf)
         
-        close all
+        imgname = outputfile;
+        options_pl={'outputfile',imgname, 'sorting', 'yes','parcel_type','RSN','mask','yes','mask_edist','yes','edist_radius',r_dist,'color_extr',[0 1]};
+        hcp_icaplotconnectome(connect_stat, sourcemodel2d, options_pl)
+        
+        % extract the index of a vertex that belongs to a node in the DMN (PCC)
+        net_seeds=hcp_mcw_netdef('DMN', []);
+        z_s=connect.blpcorr(net_seeds.cortex_index(1),:);
+        
+        imgname = [outputfile '_view_' net_seeds.label{1} '.png'];
+        color_extr= [0 1];
+        options_pl={'outputfile',imgname, 'mask','yes','color_extr',color_extr,'color_map','jet'};
+        
+        hcp_icaplotcortex(z_s, subjectid, options_pl)
+        
     end
-    clear source_blp connect
-end
+    clear source_blp connect connect_stat;
+    
+end % for each frequency band
