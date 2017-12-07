@@ -1,0 +1,26 @@
+MEGCONNECTOME is the analysis toolbox for the MEG component to the
+Human Connectome Project. Unless otherwise noted, this code is
+copyright by the Human Connectome Project and its coworkers. 
+
+See http://www.humanconnectome.org for more details.
+
+-----------------------------------------------------------------------
+
+The MATLAB code that is compiled into the megconnectome stand-alone
+executable application should consist of functions. These function
+m-files go into analysis_functions and in trial_functions.
+
+The MATLAB code that represents the analysis pipeline scripts that
+are executed by the megconnectome application should all be
+scripts (not functions) and go into pipeline_scripts.
+
+The build folder contains the MATLAB and shell-scripting code that
+is required for building the megconnectome stand-alone executable
+application.
+
+The bin folder contains a collection of Linux shell scripts to
+facilitate pipeline execution. It also contains the megconnectome
+application.
+
+The template folder contains a number of template files for 
+visualization purposes.

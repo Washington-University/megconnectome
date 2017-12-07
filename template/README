@@ -1,0 +1,35 @@
+-------------------------------------------------------------------------------
+template channel layout file 4D248.mat
+-------------------------------------------------------------------------------
+This template 2-D channel layout allows for visualization of the
+248-channel 4D MEG data in a topographic layout, as detailed on
+http://fieldtriptoolbox.org/tutorial/layout
+
+-------------------------------------------------------------------------------
+template MRI file mni_icbm152_t1_tal_nlin_sym_09a.nii
+-------------------------------------------------------------------------------
+This template MRI nifti file has been downloaded from the website of the
+McConnell Brain Imaging Centre.
+
+http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009
+
+It belongs to the ICBM 2009a Nonlinear Symmetric template which is a 1x1x1mm
+template which includes T1w, T2w, PDw modalities, also T2 relaxometry (T2
+values calculated for each subject using single dual echo PD/T2 scan), and
+tissue probabilities maps. This template also includes a lobe atlas used for
+ANIMAL+INSECT segmentation, brain mask, eye mask and face mask. The specific
+file contains the T1 weighted map derived from 152 structural images, averaged
+together after high-dimensional nonlinear registration into the common MNI152
+co-ordinate system. This template file is suitable for plotting individual or
+group brain activity maps in the MNI space.
+
+-------------------------------------------------------------------------------
+template sourcemodels based on regular 3-dimensional grids in MNI-space: 
+standard_sourcemodel3d4mm.mat, standard_sourcemodel3d6mm.mat and
+standard_sourcemodel3d8mm.mat
+-------------------------------------------------------------------------------
+The coordinates of the dipoles that are defined on these template grids (with
+regular dipole spacing of 4,6 and 8 mm) are represented in standardised MNI-space.
+The subject-specific dipole grids have been created using these templates, and
+after applying a non-linear warp to match the individual brain. More information
+can be found on http://fieldtriptoolbox.org/template/sourcemodel
