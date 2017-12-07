@@ -384,6 +384,7 @@ for iC=1:Ncontr
     
     %--------------------------
     datacntr1_MEG=ft_selectdata(datacntr1,'channel',{'MEG'});
+    chanLabels_MEG=datacntr1_MEG.label;
     if strcmp(curCM,'emgcoh')
         datacntr1_EMG=ft_selectdata(datacntr1,'channel',emgRefChan);
     else
@@ -530,11 +531,12 @@ for iC=1:Ncontr
             combCfg=[];
             combCfg.combinemethod='svd';
             freqfour_MEG=ft_combineplanar(combCfg, freqfour_MEG);
+            %freqfour_MEG.label=chanLabels_MEG;
             %freqplanar.grad=grad;
             
             avg1=ft_freqdescriptives([],freqfour_MEG);
             
-            cfg=[];cfg.parameter={'fourierspctrm','cumtapcnt'};
+            cfg=[];cfg.parameter={'fourierspctrm','cumtapcnt'};cfg.appenddim='chan';
             freqfour_MEG=ft_appendfreq(cfg,freqfour_MEG,freqfour_EMG);clear freqfour_EMG;
             
             
@@ -588,10 +590,12 @@ for iC=1:Ncontr
             combCfg=[];
             combCfg.combinemethod='svd';
             freqfour_MEG=ft_combineplanar(combCfg, freqfour_MEG);
+            %freqfour_MEG.label=chanLabels_MEG;
+            
             %freqplanar.grad=grad;
             
             if ~isempty(freqfour_EMG)
-                cfg=[];cfg.parameter={'fourierspctrm','cumtapcnt'};
+                cfg=[];cfg.parameter={'fourierspctrm','cumtapcnt'};cfg.appenddim='chan';
                 freqfour_MEG=ft_appendfreq(cfg,freqfour_MEG,freqfour_EMG);
             end
             
@@ -637,7 +641,7 @@ for iC=1:Ncontr
                 %freqplanar.grad=grad;
                 
                 if ~isempty(freqfour_EMG)
-                    cfg=[];cfg.parameter={'fourierspctrm','cumtapcnt'};
+                    cfg=[];cfg.parameter={'fourierspctrm','cumtapcnt'};cfg.appenddim='chan';
                     freqfour_MEG=ft_appendfreq(cfg,freqfour_MEG,freqfour_EMG);
                 end
                 

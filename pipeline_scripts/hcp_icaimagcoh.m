@@ -159,7 +159,9 @@ source_bic.time    = 1:comp_bic.class.brain_ic_vs_number;
 source_bic.avg.pow = zeros(size(source.pos,1),comp_bic.class.brain_ic_vs_number);
 source_bic.avg     = rmfield(source_bic.avg,'mom');
 
-for k = source.inside(:)'
+inside_indices = find(source.inside(:))';
+
+for k = inside_indices(:)'
     source_bic.avg.mom{k}   = source.avg.mom{k}(:,comp_bic.class.brain_ic_vs);
     source_bic.avg.pow(k,:) = source.avg.pow(k,comp_bic.class.brain_ic_vs);
 end
@@ -188,7 +190,7 @@ clear comp1;
 % get some sizes
 [ntrials, nic, dummy] = size(comp2.fourierspctrm);
 nfreq                 = numel(comp2.freq);
-nsource               = numel(source_bic.inside);
+nsource               = numel(find(source_bic.inside));
 [ndim, nbic]          = size(source_bic.avg.mom{source_bic.inside(1)});
 
 
@@ -235,7 +237,7 @@ for fband=aband
         disp(['f ' num2str(f)])
         mimf = zeros(nsource, nsource, 'single');
         
-        WlfAic = cat(1,source_bic.avg.mom{source_bic.inside(:)'});
+        WlfAic = cat(1,source_bic.avg.mom{inside_indices(:)});
         WlfAic = reshape( permute( reshape(WlfAic,ndim,nsource,[]),[2 1 3]),nsource*ndim,[]) ;
         ndum = size(WlfAic,1);
         
@@ -310,7 +312,7 @@ for fband=aband
     % get the data in 'full' representation, i.e. also allocate nans to the
     % outside vertices
     tmp = nan+zeros(size(source.pos,1));
-    tmp(source.inside, source.inside) = mimf_band;
+    tmp(inside_indices, inside_indices) = mimf_band;
     
     % create the output structure
     imagcoh           = [];

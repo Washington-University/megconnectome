@@ -33,3 +33,30 @@ regular dipole spacing of 4,6 and 8 mm) are represented in standardised MNI-spac
 The subject-specific dipole grids have been created using these templates, and
 after applying a non-linear warp to match the individual brain. More information
 can be found on http://fieldtriptoolbox.org/template/sourcemodel
+
+-------------------------------------------------------------------------------
+template parcellation in Yeo2011_17Networks.LR.min50sqmm.4k_fs_LR.dlabel.nii
+template parcellation in RSN-networks.LR.4k_fs_LR.dlabel.nii
+-------------------------------------------------------------------------------
+These are based on the functionally defined parcellation, described
+in: Yeo BT, et al. The organization of the human cerebral cortex
+estimated by intrinsic functional connectivity. J Neurophysiol
+106(3):1125-65, 2011.
+
+The RSN-networks contain the 7 and 17 networks, and is a downsampled
+version from the 32k version in the HCP workbench tutorial dataset.
+
+The Yeo2011_17Networks is a refinement of the 17 networks in the RSN-file.
+
+-------------------------------------------------------------------------------
+template parcellation in parcellations_VGD11b.4k_fs_LR.dlabel.nii
+-------------------------------------------------------------------------------
+The parcellations_VGD11b.4k is a low resolution version of the equivalent 32k
+version in the HCP workbench tutorial dataset.
+
+-------------------------------------------------------------------------------
+template cortical sheets in Conte69.LR.inflated.4k_fs_LR.surf.gii
+template cortical sheets in Conte69.LR.midthickness.4k_fs_LR.surf.gii
+-------------------------------------------------------------------------------
+These are downsampled versions of the 32k-vertex meshes, defined in the MNI coordinate system.
+

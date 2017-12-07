@@ -35,7 +35,6 @@ fi
 
 # determine where the shell and MATLAB scripts are located
 MEGCONNECTOME_ROOT=$HOME/matlab/megconnectome
-#MEGCONNECTOME_ROOT=$HOME/projects/megconnectome
 MEGCONNECTOME_BIN=$MEGCONNECTOME_ROOT/bin
 MEGCONNECTOME_SCRIPT=$MEGCONNECTOME_ROOT/pipeline_scripts
 

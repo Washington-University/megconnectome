@@ -369,7 +369,7 @@ for iLM=1:Nlm,
         
         
         
-        for iBand=1:length(freqBands)
+        %for iBand=1:length(freqBands)
             
             
             cntrst{end+1}=newcntrst(...
@@ -377,14 +377,16 @@ for iLM=1:Nlm,
                 'connemetric'  , 'coh',...
                 'lockmode'     , {LockModes{iLM}},...
                 'mnemtrl'      , tmpSingCases(iCase),...
-                'freqband'     , freqBands{iBand},...
                 'timeperiods'  , {srcTimesCoarseSing{iLM}},...
-                'timedef'      , 'concat',...
-                'baseline'     , {basePeriod{iLM}},...
-                'baselinetype' , 'diff',...
                 'selection'    , {eval(['sel',lmstr,'_',tmpSingCases{iCase}])},...
                 'description'  , {eval(['lab',lmstr,'_',tmpSingCases{iCase}])}...
                 );
+            %                'timedef'      , 'concat',...
+            %         'baseline'     , {basePeriod{iLM}},...
+            %        'baselinetype' , 'diff',...
+            if strcmp(tmpSingCases{iCase},'FIX'),        
+                cntrst{end}.timeperiods={srcTimesCoarseCompFIX{iLM}};
+            end
             cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
             %-------------------------------------------------------------
             cntrst{end+1}=cntrst{end};
@@ -395,9 +397,9 @@ for iLM=1:Nlm,
             cntrst{end}.connemetric= 'plv';
             cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
             %-------------------------------------------------------------
-            cntrst{end+1}=cntrst{end};
-            cntrst{end}.connemetric= 'psi';
-            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
+            %cntrst{end+1}=cntrst{end};
+            %cntrst{end}.connemetric= 'psi';
+            %cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
             %-------------------------------------------------------------
             cntrst{end+1}=cntrst{end};
             cntrst{end}.connemetric= 'powc';
@@ -407,7 +409,7 @@ for iLM=1:Nlm,
             cntrst{end}.connemetric= 'orthopowc';
             cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
             %-------------------------------------------------------------
-        end
+        %end
     end
     
     %============================================================
@@ -462,70 +464,6 @@ for iLM=1:Nlm,
         cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
         %}
         %-------------------------------------------------------------
-        
-        
-        for iBand=1:length(freqBands)
-            
-            %-------------------------------------------------------------
-            %{
-            cntrst{end+1}=newcntrst(...
-                'pipeline'     , 'srcavgdics',...
-                'operation'    , 'diff',...
-                'lockmode'     , {LockModes{iLM} LockModes{iLM}},...
-                'mnemtrl'      , tmpCompCases(iGroup,:),...
-                'freqband'     , freqBands{iBand},...
-                'timeperiods'  , {srcTimesFine{iLM}, srcTimesFine{iLM}},...
-                'invfiltertype', 'com',...
-                'selection'    , {eval(['sel',lmstr,'_',tmpCompCases{iGroup,1}]) eval(['sel',lmstr,'_',tmpCompCases{iGroup,2}])},...
-                'description'  , {eval(['lab',lmstr,'_',tmpCompCases{iGroup,1}]) eval(['lab',lmstr,'_',tmpCompCases{iGroup,2}])}...
-                );
-            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
-            %}
-            %-------------------------------------------------------------
-            %{
-            cntrst{end+1}=cntrst{end};
-            cntrst{end}.operation= 'relch';
-            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
-            %}
-            %-------------------------------------------------------------
-            cntrst{end+1}=newcntrst(...
-                'pipeline'     , 'tmegconne',...
-                'connemetric'  ,  'coh',...
-                'operation'    , 'diff',...
-                'lockmode'     , {LockModes{iLM} LockModes{iLM}},...
-                'mnemtrl'      , tmpCompCases(iGroup,:),...
-                'freqband'     , freqBands{iBand},...
-                'timeperiods'  , {srcTimesCoarseComp{iLM}, srcTimesCoarseComp{iLM}},...
-                'timedef'      , 'concat',...
-                'invfiltertype', 'com',...
-                'selection'    , {eval(['sel',lmstr,'_',tmpCompCases{iGroup,1}]) eval(['sel',lmstr,'_',tmpCompCases{iGroup,2}])},...
-                'description'  , {eval(['lab',lmstr,'_',tmpCompCases{iGroup,1}]) eval(['lab',lmstr,'_',tmpCompCases{iGroup,2}])}...
-                );
-            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
-            %-------------------------------------------------------------
-            cntrst{end+1}=cntrst{end};
-            cntrst{end}.connemetric= 'imcoh';
-            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
-            %-------------------------------------------------------------
-            cntrst{end+1}=cntrst{end};
-            cntrst{end}.connemetric= 'plv';
-            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
-            %-------------------------------------------------------------
-            cntrst{end+1}=cntrst{end};
-            cntrst{end}.connemetric= 'psi';
-            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
-            %-------------------------------------------------------------
-            cntrst{end+1}=cntrst{end};
-            cntrst{end}.connemetric= 'powc';
-            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
-            %-------------------------------------------------------------
-            cntrst{end+1}=cntrst{end};
-            cntrst{end}.connemetric= 'orthopowc';
-            cntrst{end}.mnemprint=createcontrmnem(cntrst{end});
-            %-------------------------------------------------------------
-            
-            %====================================================================
-        end
         
     end
     

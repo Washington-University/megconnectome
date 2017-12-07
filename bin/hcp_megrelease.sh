@@ -28,6 +28,8 @@
 #   --icablpenv     include the specific pipeline results
 #   --icablpcorr    include the specific pipeline results
 #   --icaimagcoh    include the specific pipeline results
+#   --bfblpenv      include the specific pipeline results
+#   --bfblpcorr     include the specific pipeline results
 #   --srcavglcmv    include the specific pipeline results
 #   --srcavgdics    include the specific pipeline results
 # The default behaviour when none of these options is specified
@@ -104,6 +106,8 @@ icamne="true"
 icablpenv="true"
 icablpcorr="true"
 icaimagcoh="true"
+bfblpenv="true"
+bfblpcorr="true"
 srcavglcmv="true"
 srcavgdics="true"
 
@@ -117,7 +121,7 @@ motort="true"
 for ARG in $@
 do
     case $ARG in 
-      --raw | --anatomy | --eprime | --datacheck | --baddata | --icaclass | --rmegpreproc | --tmegpreproc | --eravg | --tfavg | --powavg | --icamne | --icablpenv | --icablpcorr | --icaimagcoh | --srcavglcmv | --srcavgdics)
+      --raw | --anatomy | --eprime | --datacheck | --baddata | --icaclass | --rmegpreproc | --tmegpreproc | --eravg | --tfavg | --powavg | --icamne | --icablpenv | --icablpcorr | --icaimagcoh | --bfblpenv | --bfblpcorr | --srcavglcmv | --srcavgdics)
           # an explicit subselection has been made for the data type
           raw="false"
           anatomy="false"
@@ -134,6 +138,8 @@ do
           icablpenv="false"
           icablpcorr="false"
           icaimagcoh="false"
+          bfblpenv="false"
+          bfblpcorr="false"
           srcavglcmv="false"
           srcavgdics="false"
           ;;
@@ -236,6 +242,16 @@ do
 
       --icaimagcoh)
           icaimagcoh="true"
+          shift
+          ;;
+
+      --bfblpenv)
+          bfblpenv="true"
+          shift
+          ;;
+
+      --bfblpcorr)
+          bfblpcorr="true"
           shift
           ;;
 
@@ -345,6 +361,8 @@ echo "icamne        =" $icamne
 echo "icablpenv     =" $icablpenv
 echo "icablpcorr    =" $icablpcorr
 echo "icaimagcoh    =" $icaimagcoh
+echo "bfblpenv      =" $bfblpenv
+echo "bfblpcorr     =" $bfblpcorr
 echo "srcavglcmv    =" $srcavglcmv
 echo "srcavgdics    =" $srcavgdics    
 
@@ -383,7 +401,7 @@ mkdir -p $outputdir/MEG/anatomy/provenance
 mkdir -p $outputdir/MEG/anatomy/figures/provenance
 
 for scan in Rnoise Pnoise Restin Wrkmem StoryM Motort; do
-for pipeline in datacheck baddata icaclass rmegpreproc tmegpreproc eravg tfavg powavg icamne icablpenv icablpcorr icaimagcoh srcavglcmv srcavgdics; do
+for pipeline in datacheck baddata icaclass rmegpreproc tmegpreproc eravg tfavg powavg icamne icablpenv icablpcorr icaimagcoh bfblpenv bfblpcorr srcavglcmv srcavgdics; do
 mkdir -p $outputdir/MEG/$scan/$pipeline/provenance
 mkdir -p $outputdir/MEG/$scan/$pipeline/figures/provenance
 done
@@ -397,24 +415,7 @@ rm -f $outputdir/release-notes/MEG.txt
 date                                              >> $outputdir/release-notes/MEG.txt
 cat << EOF                                        >> $outputdir/release-notes/MEG.txt
 
-The following data processing pipelines were executed with megconnectome version 2.0 or 2.1
--datacheck
--baddata
--icaclass
--rmegpreproc
--powavg
--tmegpreproc
--tfavg
--eravg
-
-The following data processing pipelines were executed with megconnectome version 2.2
--anatomy
--icamne
--icablpenv
--icablpcorr
--icaimagcoh
--srcavglcmv
--srcavgdics
+All data processing pipelines were executed with megconnectome version 3.0. For some subjects that were included in earlier releases, the intermediate results from the manual processing steps that had already been performed with earlier versions of the data processing pipelines (manual coregistration of anatomy, manual detection of bad channels and segments) were retained. All results from the automatic steps were recomputed with version 3.0.
 
 EOF
 
@@ -493,20 +494,20 @@ echo packaging anatomy ...
 
 if [ $anatomy = true ] ; then 
 
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_transform.txt        $outputdir/MEG/anatomy
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_fiducials.txt        $outputdir/MEG/anatomy
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_landmarks.txt        $outputdir/MEG/anatomy
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_headmodel.mat        $outputdir/MEG/anatomy
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.mat $outputdir/MEG/anatomy
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_transform.txt         $outputdir/MEG/anatomy
+# copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_fiducials.txt        $outputdir/MEG/anatomy
+# copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_landmarks.txt        $outputdir/MEG/anatomy
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_headmodel.mat         $outputdir/MEG/anatomy
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.mat    $outputdir/MEG/anatomy
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d4mm.mat $outputdir/MEG/anatomy
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d6mm.mat $outputdir/MEG/anatomy
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d8mm.mat $outputdir/MEG/anatomy
 
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_transform.txt.xml        $outputdir/MEG/anatomy/provenance
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_fiducials.txt.xml        $outputdir/MEG/anatomy/provenance
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_landmarks.txt.xml        $outputdir/MEG/anatomy/provenance
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_headmodel.mat.xml        $outputdir/MEG/anatomy/provenance
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.mat.xml $outputdir/MEG/anatomy/provenance
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_transform.txt.xml         $outputdir/MEG/anatomy/provenance
+# copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_fiducials.txt.xml        $outputdir/MEG/anatomy/provenance
+# copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_landmarks.txt.xml        $outputdir/MEG/anatomy/provenance
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_headmodel.mat.xml         $outputdir/MEG/anatomy/provenance
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.mat.xml    $outputdir/MEG/anatomy/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d4mm.mat.xml $outputdir/MEG/anatomy/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d6mm.mat.xml $outputdir/MEG/anatomy/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d8mm.mat.xml $outputdir/MEG/anatomy/provenance
@@ -515,17 +516,19 @@ copy $inputdir/RESOURCES/anatomy/${subject}.L.inflated.4k_fs_LR.surf.gii     $ou
 copy $inputdir/RESOURCES/anatomy/${subject}.R.inflated.4k_fs_LR.surf.gii     $outputdir/MEG/anatomy
 copy $inputdir/RESOURCES/anatomy/${subject}.L.midthickness.4k_fs_LR.surf.gii $outputdir/MEG/anatomy
 copy $inputdir/RESOURCES/anatomy/${subject}.R.midthickness.4k_fs_LR.surf.gii $outputdir/MEG/anatomy
+copy $inputdir/RESOURCES/anatomy/T1w_acpc_dc_restore.nii.gz                  $outputdir/MEG/anatomy
+
 
 for ext in png ; do
 
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_headmodel.$ext         $outputdir/MEG/anatomy/figures
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.$ext $outputdir/MEG/anatomy/figures
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.$ext    $outputdir/MEG/anatomy/figures
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d4mm.$ext $outputdir/MEG/anatomy/figures
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d6mm.$ext $outputdir/MEG/anatomy/figures
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d8mm.$ext $outputdir/MEG/anatomy/figures
 
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_headmodel.$ext.xml         $outputdir/MEG/anatomy/figures/provenance
-copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.$ext.xml $outputdir/MEG/anatomy/figures/provenance
+copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_2d.$ext.xml    $outputdir/MEG/anatomy/figures/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d4mm.$ext.xml $outputdir/MEG/anatomy/figures/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d6mm.$ext.xml $outputdir/MEG/anatomy/figures/provenance
 copy $inputdir/RESOURCES/anatomy/${subject}_MEG_anatomy_sourcemodel_3d8mm.$ext.xml $outputdir/MEG/anatomy/figures/provenance
@@ -588,6 +591,8 @@ if [ $icamne     = true ]; then pipeline=("${pipeline[@]}" icamne    ) ; fi
 if [ $icablpenv  = true ]; then pipeline=("${pipeline[@]}" icablpenv ) ; fi
 if [ $icablpcorr = true ]; then pipeline=("${pipeline[@]}" icablpcorr) ; fi
 if [ $icaimagcoh = true ]; then pipeline=("${pipeline[@]}" icaimagcoh) ; fi
+if [ $bfblpenv   = true ]; then pipeline=("${pipeline[@]}" bfblpenv  ) ; fi
+if [ $bfblpcorr  = true ]; then pipeline=("${pipeline[@]}" bfblpcorr ) ; fi
 if [ $srcavglcmv = true ]; then pipeline=("${pipeline[@]}" srcavglcmv) ; fi
 if [ $srcavgdics = true ]; then pipeline=("${pipeline[@]}" srcavgdics) ; fi
 
@@ -599,23 +604,25 @@ if [ $motort    = true ]; then scan=("${scan[@]}" Motort       ) ; fi
 
 echo packaging source reconstructed data for ${pipeline[*]} ${scan[*]} ...
 
+# these files are either in rmeg, tmeg or in the analysis subdirectory
+
 for s in "${scan[@]}" ; do
 for p in "${pipeline[@]}" ; do
 
 for ext in nii ; do
-for file in $inputdir/RESOURCES/?meg/*"$s"_"$p"*."$ext" ; do 
+for file in $inputdir/RESOURCES/*/*"$s"_"$p"*."$ext" ; do 
 copy "$file" $outputdir/MEG/$s/$p/
 done
-for file in $inputdir/RESOURCES/?meg/*"$s"_"$p"*."$ext".xml ; do 
+for file in $inputdir/RESOURCES/*/*"$s"_"$p"*."$ext".xml ; do 
 copy "$file" $outputdir/MEG/$s/$p/provenance
 done
 done
 
 for ext in png ; do
-for file in $inputdir/RESOURCES/?meg/*"$s"_"$p"*."$ext" ; do 
+for file in $inputdir/RESOURCES/*/*"$s"_"$p"*."$ext" ; do 
 copy "$file" $outputdir/MEG/$s/$p/figures/
 done
-for file in $inputdir/RESOURCES/?meg/*"$s"_"$p"*."$ext".xml ; do 
+for file in $inputdir/RESOURCES/*/*"$s"_"$p"*."$ext".xml ; do 
 copy "$file" $outputdir/MEG/$s/$p/figures/provenance/
 done
 done
@@ -625,7 +632,10 @@ done
 
 
 ###################################################################################################
-echo cleaning up empty directories ...
+echo cleaning up ...
 
+# empty directories
 find $outputdir -depth -type d -exec rmdir --ignore-fail-on-non-empty {} \;
+# warning files
+find $outputdir -type f -name WARNING_\* -exec rm {} \;
 

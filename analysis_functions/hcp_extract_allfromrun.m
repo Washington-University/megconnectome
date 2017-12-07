@@ -161,6 +161,11 @@ if strcmp(badsegmode, 'remfull')
     cfg.artfctdef.reject = 'complete';
     cfg.artfctdef.all.artifact = badSegments;
     
+elseif strcmp(badsegmode, 'partial')
+    cfg = [];
+    cfg.artfctdef.reject = 'partial';
+    cfg.artfctdef.all.artifact = badSegments;    
+    
 elseif strcmp(badsegmode, 'repnan')
     disp('Trial structure preserved. Bad segments replaced with nan');
     cfg = [];
@@ -174,7 +179,7 @@ elseif strcmp(badsegmode, 'repnan')
     
 end
 
-if strcmp(badsegmode, 'remfull')
+if strcmp(badsegmode, 'remfull')|strcmp(badsegmode, 'partial')
     
     dataCleanNEURO1 = ft_rejectartifact(cfg, dataNEURO);
     if hasELEC
@@ -239,10 +244,13 @@ end
 %clear origDataELEC;
 % ===================================================
 % -- Denoise with Reference Sensors --
-cfg = [];
-denDataNEURO = ft_denoise_pca(cfg, dataCleanNEURO1);
-clear dataCleanNEURO1 ;
+%cfg = [];
+%denDataNEURO = ft_denoise_pca(cfg, dataCleanNEURO1);
+%clear dataCleanNEURO1 ;
 
+
+denDataNEURO =  dataCleanNEURO1;
+clear dataCleanNEURO1 ;
 % =======================================
 % -- Remove line noise --------------------
 for iLine = 1:length(lineFreq)
@@ -297,6 +305,14 @@ if ~isempty(badicacomps)
 else
     dataNEURO = denDataNEURO; clear denDataNEURO;
 end
+
+% ===================================================
+% -- Denoise with Reference Sensors --
+cfg = [];
+dataNEURO = ft_denoise_pca(cfg, dataNEURO);
+
+
+
 % ==========================================
 % Do resampling
 % -- Resample to 500 Hz
@@ -343,7 +359,7 @@ end;
 % =======================================
 if strcmp(badsegmode, 'repnan')
     addTrlColmn = trlNanFlag;
-elseif strcmp(badsegmode, 'remfull')
+elseif strcmp(badsegmode, 'remfull')|strcmp(badsegmode, 'partial')
     addTrlColmn = zeros(length(data.trial), 1);
 end
 data.trialinfo = [data.trialinfo addTrlColmn];

@@ -31,7 +31,8 @@ load('hcp_cortex_seeds')
 if isempty(custom_seeds)
 if(strcmp(net,'DMN'))
 %'DMN'   
-label{1}='preCunPC' ;  hemi{1}='L';
+% label{1}='preCunPC' ;  hemi{1}='L';
+label{1}='PCC' ;  hemi{1}='L';
 label{2}='mPFC2';      hemi{2}='L';    
 label{3}='AG';         hemi{3}='R';
 label{4}='AG';         hemi{4}='L';

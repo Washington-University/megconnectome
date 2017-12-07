@@ -164,6 +164,21 @@ if ~exist('savedir', 'var')
 end
 
 
+if ~exist('beamflambda','var')
+    %beamflambda='100%';
+    error('The beamformer lambda has not been set');
+else
+    if ischar(beamflambda)
+        beamflambda=str2num(beamflambda);
+        if isempty(beamflambda)
+            error('There is a problem with the beamformer lambda set by the user');
+        end
+        beamflambda=[num2str(beamflambda),'%'];
+    elseif isnumeric(beamflambda)
+        beamflambda=[num2str(beamflambda),'%'];
+    end
+end
+
 % print the matlab and megconnectome version to screen for provenance
 ver('megconnectome')
 
@@ -353,8 +368,8 @@ cfg.multiscanid   = multiscanid;
 cfg.anatomydir    = anatomydir;
 cfg.gridtype      = srcgridtype;
 cfg.savedir       = savedir;
-
+cfg.beamflambda   = beamflambda;
 [outStatus] = hcp_srcavglcmv_contrasts(cfg);
 
-hcp_check_pipelineoutput('srcavglcmv', 'subject', subjectid, 'experiment', experimentid, 'scan', scanmnem,'contrasts',procCntrNames,'gridtype',cfg.gridtype,'savedir',savedir);
+%hcp_check_pipelineoutput('srcavglcmv', 'subject', subjectid, 'experiment', experimentid, 'scan', scanmnem,'contrasts',procCntrNames,'gridtype',cfg.gridtype,'savedir',savedir);
 

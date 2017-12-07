@@ -38,7 +38,7 @@ multiscanid=inCfg.multiscanid;   % Cell with the scan id of both files. They sho
 contrastlist=inCfg.contrastlist; % Cell with list of contrasts
 anatomydir = inCfg.anatomydir;   % Directory where anatomy file are source space models are located.
 gridtype=inCfg.gridtype;         % Can be '3D'(using 8mm) or '2D'%
-
+beamflambda =inCfg.beamflambda;    % char i.e. '100%' with the regularisation lambda for the beamformer
 %===================================================================
 % Set basic filtering settings for sensor level preprocessing
 
@@ -551,7 +551,7 @@ for iC=1:Ncontr
     srcCfg.method='lcmv';
     srcCfg.fixedori='yes';
     srcCfg.feedback='text';
-    srcCfg.lambda='100%';
+    srcCfg.lambda=beamflambda;
     srcCfg.projectnoise='no';
     srcCfg.keepfilter='yes';
     srcCfg.keepleadfield='yes';
@@ -560,13 +560,14 @@ for iC=1:Ncontr
     
     %--- Select only channels of current data set in already computed leadfields -----------
     [indA,indB]=match_str(datavgall.label,gridAllLF.label);
-    Nsrc=length(gridAllLF.inside);
+    inIndices=find(gridAllLF.inside);
+    Nsrc=length(inIndices);
     gridCase=gridAllLF;
-    gridCase.leadfield(gridCase.inside)=cellfun(@(x,y) x(y,:),gridAllLF.leadfield(gridAllLF.inside),repmat({indB},1,Nsrc),'UniformOutput',false);
+    gridCase.leadfield(inIndices)=cellfun(@(x,y) x(y,:),gridAllLF.leadfield(inIndices),repmat({indB},1,Nsrc),'UniformOutput',false);
     
     %----- Add grid to source localization settings
     srcCfg.grid=gridCase;
-    
+    srcCfg.grid.label=gridCase.label(indB);
     %----- Compute Inverse Solution from Covariance matrix ------------
     
     %  this provides the spatial filters that will project the data for the
@@ -584,7 +585,7 @@ for iC=1:Ncontr
     % projected through the Spatial Filters
     
     NsrcTotal=size(sourceLocAll.pos,1);
-    NsrcIn=length(sourceLocAll.inside);
+    NsrcIn=length(inIndices);
     if (~isFixedLen1) % if data has no fixed length then only the total power from the entire data will be provided
         sourceLocOut=rmfield(sourceLocAll,'time');
         sourceLocOut.period='all';
@@ -609,7 +610,7 @@ for iC=1:Ncontr
                 srcCfg.keepmom='no';
                 srcCfg.filter=sourceLocAll.avg.filter;
                 tmpSourceLoc=ft_sourceanalysis(srcCfg,datavgall);
-                sourceLocOut.avg.pow(sourceLocOut.inside,iPeriod)=tmpSourceLoc.avg.pow(tmpSourceLoc.inside);
+                sourceLocOut.avg.pow(inIndices,iPeriod)=tmpSourceLoc.avg.pow(inIndices);
                 sourceLocOut.time=mean(timeperiods{1},2);
                 sourceLocOut.period=timeperiods{1};
                 clear tmpSourceLoc tmpDatAvg;
@@ -625,7 +626,7 @@ for iC=1:Ncontr
                 tmpSourceLoc=ft_sourceanalysis(srcCfg,datavgall);
                 Ndattimes=length(datavgall.time);
                 tmpPowAll=nan(NsrcIn,Ndattimes);
-                tmpPowAll(tmpSourceLoc.inside,:)=reshape([tmpSourceLoc.avg.mom{tmpSourceLoc.inside}].^2,Ndattimes,NsrcIn)';
+                tmpPowAll(inIndices,:)=reshape([tmpSourceLoc.avg.mom{inIndices}].^2,Ndattimes,NsrcIn)';
                 
                 
                 
@@ -646,7 +647,7 @@ for iC=1:Ncontr
                     tmpPowDown(:,iTime)=mean(tmpPowAll(:,(max(1,(tmpIndMat(iTime)-smoothHalfWin)):min(size(tmpPowAll,2),(tmpIndMat(iTime)+smoothHalfWin)))),2);
                 end
                 sourceLocOut.avg.pow=nan(NsrcTotal,NtimesOut);
-                sourceLocOut.avg.pow(sourceLocOut.inside,:)=tmpPowDown;
+                sourceLocOut.avg.pow(inIndices,:)=tmpPowDown;
                 clear tmpPowDown tmpPowAll dattimes;
             else
                 sourceLocOut=rmfield(sourceLocOut,'time');
@@ -681,7 +682,7 @@ for iC=1:Ncontr
         end
         srcCfg.keepmom='no';
         tmpSourceLoc=ft_sourceanalysis(srcCfg,datavgall);
-        sourceLocBase.avg.pow(sourceLocOut.inside)=tmpSourceLoc.avg.pow(tmpSourceLoc.inside);
+        sourceLocBase.avg.pow(inIndices)=tmpSourceLoc.avg.pow(inIndices);
         clear tmpSourceLoc tmpDatAvg;
     else
         sourceLocBase=[];
@@ -820,7 +821,8 @@ for iC=1:Ncontr
     end
     %}
     %save as mat file
-    hcp_write_matlab(saveFnameData,'source'); clear sourceLocOut source2Plot sourceLocBase source2PlotBase;
+    %hcp_write_matlab(saveFnameData,'source'); 
+    clear sourceLocOut source2Plot sourceLocBase source2PlotBase;
     % save it as a cifti file
     hcp_write_cifti([saveFnameData '.power'], source, 'parameter', 'power', 'type', sourcetype,'precision','double'); clear source;
     
@@ -876,11 +878,12 @@ intCfg.parameter = 'avg.pow';
 
 %----------------------------------------------------------------
 % Define the plot color limits
-[maxabsVal,maxabsInd]=max(abs(dumSrc.avg.pow(dumSrc.inside)));
-maxabsIndTot=dumSrc.inside(maxabsInd);
+inIndices=find(dumSrc.inside);
+[maxabsVal,maxabsInd]=max(abs(dumSrc.avg.pow(inIndices)));
+maxabsIndTot=inIndices(maxabsInd);
 
-[minVal,minInd]=min((dumSrc.avg.pow(dumSrc.inside)));
-[maxVal,maxInd]=max((dumSrc.avg.pow(dumSrc.inside)));
+[minVal,minInd]=min((dumSrc.avg.pow(inIndices)));
+[maxVal,maxInd]=max((dumSrc.avg.pow(inIndices)));
 if sign(maxVal)~=sign(minVal)
     subclim=0.75*maxabsVal*[-1 1];
     %subAlim=0.05*maxabsVal*[-1 1];
@@ -971,11 +974,12 @@ end
 
 %--------------------------------------------------------
 % Define plot color limits
-[maxabsVal,maxabsInd]=max(abs(dumSrc.avg.pow(dumSrc.inside)));
-maxabsIndTot=dumSrc.inside(maxabsInd);
+inIndices=find(dumSrc.inside);
+[maxabsVal,maxabsInd]=max(abs(dumSrc.avg.pow(inIndices)));
+maxabsIndTot=inIndices(maxabsInd);
 
-[minVal,minInd]=min((dumSrc.avg.pow(dumSrc.inside)));
-[maxVal,maxInd]=max((dumSrc.avg.pow(dumSrc.inside)));
+[minVal,minInd]=min((dumSrc.avg.pow(inIndices)));
+[maxVal,maxInd]=max((dumSrc.avg.pow(inIndices)));
 if sign(maxVal)~=sign(minVal)
     subclim=0.75*maxabsVal*[-1 1];
 else

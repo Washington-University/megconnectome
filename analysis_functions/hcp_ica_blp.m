@@ -147,9 +147,13 @@ P  = sparse(ix,iy,iz);
 IC = IC(:,1:size(P,1)); % the last bunch of samples are not used anyway
 source_sig= source_sig(:,1:size(P,1));
 
+inside_indices = find(source.inside(:))';
+
+IC=IC.*10^15;
+
 for is=1:nsource
     ft_progress(is/nsource, 'evaluating power voxel %d from %d\n', is, nsource);
-    source_sig(:,:)=source.avg.mom{source.inside(is)'}(:,brainic_indx)*IC;
+    source_sig(:,:)=source.avg.mom{inside_indices(is)}(:,brainic_indx)*IC;
     sigt=sum(source_sig.^2,1);
     power(is,:) = sigt*P;
 end

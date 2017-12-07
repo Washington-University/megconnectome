@@ -174,10 +174,12 @@ prestimSamples = floor(prestimTime*Fsample);
 poststimSamples = floor(poststimTime*Fsample);
 
 % SPLIT TRIGGERS FROM PARALLEL PORT AND TRIGGERS FROM PHOTODIODE
+%trigComb=detailedTrigger;
+%trigParal=trigComb-256*(floor(trigComb./256));
+%trigPhoto=256*(floor(trigComb./256));
 trigComb=detailedTrigger;
-trigParal=trigComb-256*(floor(trigComb./256));
-trigPhoto=256*(floor(trigComb./256));
-
+trigParal=bitand(trigComb,255);
+trigPhoto= bitand(trigComb-bitand(trigComb,255),511);
 %----------------------------------------------------------
 % the following contains informatin about e-prime triggers for cues and
 % crosses. COL1: trigger calue. COL2: 1:cue 2:cross. COL3:1:Left Hand
@@ -623,6 +625,7 @@ motorTrialInfoEMG=tmpInfoEMG;
 %================================================================
 %% FORM OUTPUT TRL
 if strcmp(cutMode,'blocks')
+    Nblocks=size(allBlockInfo,1);
     trl=[allBlockInfo(:,3)-prestimSamples allBlockInfo(:,15)+poststimSamples -repmat(prestimSamples,Nblocks,1)  allBlockInfo];
     [i1,j1]=find(trl(:,2)>Nsamples);
     trl(i1,:)=Nsamples;

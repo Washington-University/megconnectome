@@ -45,13 +45,13 @@ elseif strcmp(modality,'EEG')
     layout='EEG1010.lay';
 end
 
-if(~isfield(comp,'trial'))
-    for i=1:size(datain.trial,2)
-        comp.trial{i} = comp.unmixing*datain.trial{i};
-    end
-end
-
-comp.time={cell2mat(datain.time)};
+% if(~isfield(comp,'trial'))
+%     for i=1:size(datain.trial,2)
+%         comp.trial{i} = comp.unmixing*datain.trial{i};
+%     end
+% end
+% 
+% comp.time={cell2mat(datain.time)};
 
 
 if(~isfield(comp,'pow_data'))

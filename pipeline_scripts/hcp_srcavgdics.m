@@ -222,6 +222,20 @@ if (~isempty(contrastid))&(~isempty(freqbandid))
 end
 
 
+if ~exist('beamflambda','var')
+    %beamflambda='100%';
+    error('The beamformer lambda has not been set');
+else
+    if ischar(beamflambda)
+        beamflambda=str2num(beamflambda);
+        if isempty(beamflambda)
+            error('There is a problem with the beamformer lambda set by the user');
+        end
+        beamflambda=[num2str(beamflambda),'%'];
+    elseif isnumeric(beamflambda)
+        beamflambda=[num2str(beamflambda),'%'];
+    end
+end
 
 
 
@@ -415,13 +429,13 @@ end
 
 
 bandDef={'delta' [1 4]
-         'theta' [4 8]
-         'alpha' [8 15]
-         'betalow' [15 26]
-         'betahigh' [26 35]
-         'gammalow' [35 50]
-         'gammamid' [50 76]
-         'gammahigh' [76 120]};
+    'theta' [4 8]
+    'alpha' [8 15]
+    'betalow' [15 26]
+    'betahigh' [26 35]
+    'gammalow' [35 50]
+    'gammamid' [50 76]
+    'gammahigh' [76 120]};
 
 
 %{
@@ -443,36 +457,36 @@ bandDef={'D1',   [1 3]
          'G5',   [65  85]
          'G6',   [75  95]
          'G7',   [85  110]};
-%}
-%==========================================================================
-% procCntrList;
-% procCntrNames;
-% procGroups;
-
-if Nfiles==1,
-    multiscanid={scanid1};
-elseif Nfiles==2,
-    multiscanid={scanid1 scanid2};
-end
-% 
-
-%  allprocCntrList= procCntrList;
-%  procCntrList{1}=allprocCntrList{1}(1);
-%  procCntrList{2}=allprocCntrList{2}(1);
-
-
-cfg = [];
-cfg.contrastlist   =  procCntrList;
-cfg.subjectid      =  subjectid;
-cfg.experimentid   =  experimentid;
-cfg.multiscanid    =  multiscanid;
-cfg.bandinfo       =  bandDef;
-cfg.anatomydir    = anatomydir;
-cfg.gridtype      = srcgridtype;
-cfg.savedir       = savedir;
-
-[outStatus] = hcp_srcavgdics_contrasts(cfg);
-
-% hcp_check_pipelineoutput('srcavgdics', 'subject', subjectid, 'experiment', experimentid, 'scan', scanmnem,'avgmode',avgmode,'contrasts',procCntrNames);
-
-
+    %}
+    %==========================================================================
+    % procCntrList;
+    % procCntrNames;
+    % procGroups;
+    
+    if Nfiles==1,
+        multiscanid={scanid1};
+    elseif Nfiles==2,
+        multiscanid={scanid1 scanid2};
+    end
+    %
+    
+    %  allprocCntrList= procCntrList;
+    %  procCntrList{1}=allprocCntrList{1}(1);
+    %  procCntrList{2}=allprocCntrList{2}(1);
+    
+    
+    cfg = [];
+    cfg.contrastlist   =  procCntrList;
+    cfg.subjectid      =  subjectid;
+    cfg.experimentid   =  experimentid;
+    cfg.multiscanid    =  multiscanid;
+    cfg.bandinfo       =  bandDef;
+    cfg.anatomydir    = anatomydir;
+    cfg.gridtype      = srcgridtype;
+    cfg.savedir       = savedir;
+    cfg.beamflambda   = beamflambda;
+    [outStatus] = hcp_srcavgdics_contrasts(cfg);
+    
+    % hcp_check_pipelineoutput('srcavgdics', 'subject', subjectid, 'experiment', experimentid, 'scan', scanmnem,'avgmode',avgmode,'contrasts',procCntrNames);
+    
+    

@@ -43,11 +43,11 @@ elseif strcmp(modality,'EEG')
     layout='EEG1010.lay';
 end
 
-for i=1:size(datain.trial,2)
-    comp.trial{i} = comp.unmixing*datain.trial{i};
-end
-
-comp.time={cell2mat(datain.time)};
+% for i=1:size(datain.trial,2)
+%     comp.trial{i} = comp.unmixing*datain.trial{i};
+% end
+% 
+% comp.time={cell2mat(datain.time)};
 
 
 if(~isfield(comp,'pow_data'))
@@ -111,7 +111,7 @@ for ix=1:n_IC
     set(gcf, 'PaperUnits','inches')
 
     set(gcf, 'paperposition', [1 1 20 12]);
-
+    comp.time=datain.time;
     subplot(2,3,1)
     cfgin.component=ix;
     cfgin.layout=layout;

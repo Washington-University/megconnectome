@@ -78,7 +78,7 @@ hcp_check_pipelineoutput('icaclass', 'subject', subjectid, 'experiment', experim
 resultprefix  = sprintf('%s_%s', experimentid, scanid);
 badchansuffix = 'baddata_badchannels';  % mnemonic for file that contains bad channel and segment info
 badsegmsuffix = 'baddata_badsegments';  % mnemonic for file that contains bad channel and segment info
-icainfosuffix = 'icaclass';             % mnemonic to save results
+icainfosuffix = 'icaclass_vs';             % mnemonic to save results
 
 cfg                       = [];
 cfg.dataset               = filename;

@@ -342,7 +342,10 @@ switch pipeline
         assert_file('%s_%s_icaimagcoh_%s.mat', experiment, scan, band);
         
     case 'icablpenv'
-        assert_file('%s_%s_icablpenv_%s.mat', experiment, scan, band);
+        assert_file('%s_%s_icablpenv_%s.power.dtseries.nii', experiment, scan, band);
+    
+    case 'bfblpenv'
+        assert_file('%s_%s_bfblpenv_%s.power.dtseries.nii', experiment, scan, band);
         
     case 'icamcw'
         assert_file('%s_%s_mcw_%s_%s_%s.mat', experiment, scan, sourcemodel_type, net_seed, band);

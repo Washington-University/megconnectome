@@ -99,7 +99,9 @@ switch getdimord(source, parameter)
   case 'chan_freq'
     % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SERIES
     extension = '.ptseries.nii';
-    
+  case 'pos_pos_time'
+    % NIFTI_INTENT_CONNECTIVITY_PARCELLATED_SERIES
+    extension = '.dconnseries.nii';    
   otherwise
     error('unsupported dimord "%s"', dimord);
 end % switch
@@ -110,7 +112,7 @@ if isequal(x, '.nii')
 end
 
 [p, f, x] = fileparts(filename);
-if any(isequal(x, {'.dtseries', '.ptseries', '.dconn', '.pconn', '.dscalar', '.pscalar'}))
+if any(isequal(x, {'.dtseries', '.ptseries', '.dconn', '.pconn', '.dscalar', '.pscalar', '.dconnseries'}))
   filename = fullfile(p, f); % strip the extension
 end
 

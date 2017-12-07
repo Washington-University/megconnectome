@@ -150,8 +150,9 @@ if dopipeinteractive,
         fprintf('Please identify the Anterior Commissure, Posterior Commissure, a point on the positive Z and X axes, and a point on the right part of the head\n');
         cfg             = [];
         cfg.interactive = 'yes';
+        cfg.coordsys    = 'spm';
         mri             = ft_volumerealign(cfg, mriorig);
-        landmarks       = mri.cfg.landmark;
+        landmarks       = mri.cfg.fiducial;
         landmarks.coordsys = 'vox';
         hcp_write_ascii(textfile_landmarks, 'landmarks');
     end
@@ -164,6 +165,7 @@ if dopipeinteractive,
         fprintf('Please identify the LPA, RPA, nasion, and a point on the positive Z-axis\n');
         cfg             = [];
         cfg.interactive = 'yes';
+        cfg.coordsys    = 'bti';
         mri             = ft_volumerealign(cfg, mriorig);
         fiducials       = mri.cfg.fiducial;
         fiducials.coordsys = 'vox';
@@ -222,6 +224,7 @@ if dopipeinteractive,
           
           cfg          = [];
           cfg.landmark = landmarks;
+          cfg.coordsys = 'spm';
           mri          = ft_volumerealign(cfg, mriorig);
           
           if exist('hrmrifile', 'var') && exist(hrmrifile, 'file')
@@ -303,6 +306,7 @@ if dopipeinteractive,
           % do an initial coregistration to BTI space
           cfg          = [];
           cfg.fiducial = fiducials;
+          cfg.coordsys = 'bti';
           mri          = ft_volumerealign(cfg, mriorig);
           
           transform.vox2bti_interactive = mri.transform;
@@ -415,7 +419,7 @@ if dopipeinteractive,
           cfg.location = landmarks.xzpoint;
           figure;ft_sourceplot(cfg, mri);
           hcp_write_figure([outputprefix,'_landmarks_xzpoint.png'], gcf, 'resolution', 500); close;
-          cfg.location = landmarks.rpoint;
+          cfg.location = landmarks.right;
           figure;ft_sourceplot(cfg, mri);
           hcp_write_figure([outputprefix,'_landmarks_rpoint.png'], gcf, 'resolution', 500); close;
           
@@ -553,8 +557,9 @@ if dopipeautomatic,
         headmodel.coordsys = 'bti';
         headmodel  = ft_convert_units(headmodel);
         
-        % write the headmodel
+        % write the headmodel as mat-file and as gifti
         hcp_write_matlab([outputprefix,'_headmodel'], 'headmodel');
+        hcp_write_gifti([outputprefix,'_headmodel.gii'], headmodel.bnd);
         
         % create figures for qualitycheck
         hcp_read_ascii(textfile_fiducials);
@@ -865,10 +870,10 @@ if dopipeautomatic,
         
         figure;
         options = {'transform',mri.transform,'intersectmesh',{sourcemodel2d headmodel.bnd}};
-        subplot(2,2,1); hold on; hcp_plot_slice(mri.anatomy, 'location', [0  0 60], 'orientation', [0 0 1], options{:}); view(0,90);
-        subplot(2,2,2); hold on; hcp_plot_slice(mri.anatomy, 'location', [0  0 20], 'orientation', [0 0 1], options{:}); view(0,90);
-        subplot(2,2,3); hold on; hcp_plot_slice(mri.anatomy, 'location', [0 20  0], 'orientation', [1 0 0], options{:}); view(90,0);
-        subplot(2,2,4); hold on; hcp_plot_slice(mri.anatomy, 'location', [0 20  0], 'orientation', [0 1 0], options{:}); view(0,0);
+        subplot(2,2,1); hold on; ft_plot_slice(mri.anatomy, 'location', [0  0 60], 'orientation', [0 0 1], options{:}); view(0,90);
+        subplot(2,2,2); hold on; ft_plot_slice(mri.anatomy, 'location', [0  0 20], 'orientation', [0 0 1], options{:}); view(0,90);
+        subplot(2,2,3); hold on; ft_plot_slice(mri.anatomy, 'location', [0 20  0], 'orientation', [1 0 0], options{:}); view(90,0);
+        subplot(2,2,4); hold on; ft_plot_slice(mri.anatomy, 'location', [0 20  0], 'orientation', [0 1 0], options{:}); view(0,0);
         set(gcf, 'Renderer', 'zbuffer')
         hcp_write_figure([outputprefix,'_sourcemodel_2d.png']);
 
@@ -876,17 +881,17 @@ if dopipeautomatic,
            'intersectlinewidth',1,'slicesize',[300 300]};
 
         figure;
-        hcp_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [0 0 1], 'slicerange', [-20 120], options{:});
+        ft_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [0 0 1], 'slicerange', [-20 120], options{:});
         set(gcf, 'Renderer', 'zbuffer');   
         hcp_write_figure([outputprefix,'_slice1.png'], 'resolution', 300);
 
         figure;
-        hcp_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [0 1 0], 'slicerange', [-60 60], options{:});
+        ft_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [0 1 0], 'slicerange', [-60 60], options{:});
         set(gcf, 'Renderer', 'zbuffer');
         hcp_write_figure([outputprefix,'_slice2.png'], 'resolution', 300);
 
         figure;
-        hcp_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [1 0 0], 'slicerange', [-70 110], options{:});
+        ft_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [1 0 0], 'slicerange', [-70 110], options{:});
         set(gcf, 'Renderer', 'zbuffer');
         hcp_write_figure([outputprefix,'_slice3.png'], 'resolution', 300);
         

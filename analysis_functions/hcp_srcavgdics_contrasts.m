@@ -39,7 +39,7 @@ contrastlist=inCfg.contrastlist;
 anatomydir = inCfg.anatomydir;
 gridtype=inCfg.gridtype; %Can be '3D'(using 8mm) or '2D'%
 bandinfo=inCfg.bandinfo;
-
+beamflambda =inCfg.beamflambda;    % char i.e. '100%' with the regularisation lambda for the beamformer
 %------------------------------------------
 % Arrange input frequency bands
 freqBands=reshape([bandinfo{:,2}],2,size(bandinfo,1))';
@@ -699,7 +699,7 @@ for iC=1:Ncontr
         srcCfg.frequency = curFreq;
         srcCfg.fixedori='yes';
         srcCfg.feedback='text';
-        srcCfg.lambda='100%';
+        srcCfg.lambda=beamflambda;
         srcCfg.projectnoise='yes';
         srcCfg.keepfilter='yes';
         srcCfg.keepleadfield='yes';
@@ -708,13 +708,15 @@ for iC=1:Ncontr
         
         [indA,indB]=match_str(channelsMEG,gridAllLF.label);
         
-        NsrcIn=length(gridAllLF.inside);
+        inIndices=find(gridAllLF.inside);
+        NsrcIn=length(inIndices);
         Nsrc=size(gridAllLF.pos,1);
         
         gridCase=gridAllLF;
-        gridCase.leadfield(gridCase.inside)=cellfun(@(x,y) x(y,:),gridAllLF.leadfield(gridAllLF.inside),repmat({indB},1,NsrcIn),'UniformOutput',false);
+        gridCase.leadfield(inIndices)=cellfun(@(x,y) x(y,:),gridAllLF.leadfield(inIndices),repmat({indB},1,NsrcIn),'UniformOutput',false);
         
         srcCfg.grid=gridCase;
+        srcCfg.grid.label=gridCase.label(indB);
         disp('...beamforming...');
         
         %[indA,indB]=match_str(specavg4src.label,channelsMEG);
@@ -765,7 +767,7 @@ for iC=1:Ncontr
                     NelecMEG=length(indMEG);
                     NelecEMG=length(indEMG);
                     
-                    totFilter=reshape([sourceLocAll.avg.filter{sourceLocAll.inside}],NelecMEG,NsrcIn)';
+                    totFilter=reshape([sourceLocAll.avg.filter{inIndices}],NelecMEG,NsrcIn)';
                     totFilterT=totFilter';
                     
                     
@@ -783,7 +785,7 @@ for iC=1:Ncontr
                         if strcmp(outtype,'pow')
                             tmpSrc_X=totFilter*tmpSensM_X*(totFilterT);  clear tmpSensM_X;
                             tmpSrc_A=real(diag(tmpSrc_X))';              clear tmpSrc_X;
-                            totalMetric(sourceLocAll.inside,iTime)=tmpSrc_A;
+                            totalMetric(inIndices,iTime)=tmpSrc_A;
                             
                         elseif strcmp(outtype,'emgcoh')
                             
@@ -801,7 +803,7 @@ for iC=1:Ncontr
                             refchanInd = match_str(channelsEMG,refchan);
                             
                             
-                            totalMetric(sourceLocAll.inside,iTime)=(abs(tmpSrcEM_X(refchanInd,:)))./(sqrt(tmpSrc_A).*sqrt(tmpSensE_A(refchanInd)));
+                            totalMetric(inIndices,iTime)=(abs(tmpSrcEM_X(refchanInd,:)))./(sqrt(tmpSrc_A).*sqrt(tmpSensE_A(refchanInd)));
                             
                             clear tmpSrcEM_X tmpSensE_A ;
                             
@@ -852,6 +854,7 @@ for iC=1:Ncontr
             sourceLocBase.freq=curFreq;
             sourceLocBase.band=curBand;
             sourceLocBase.bandname=curBandName;
+            
             
         else
             sourceLocBase=[];
@@ -932,6 +935,10 @@ for iC=1:Ncontr
         if hasBaseline
             if strcmp(outtype,'emgcoh')
                 source2PlotBase.avg.pow=source2PlotBase.avg.emgcoh;
+            end
+            [tmps1,tmps2]=size(source2PlotBase.avg.pow);
+            if tmps2>tmps1,
+                source2PlotBase.avg.pow=source2PlotBase.avg.pow';
             end
         end
         
@@ -1021,7 +1028,8 @@ for iC=1:Ncontr
         
         
         %Save in Mat
-        hcp_write_matlab(saveFnameData,'source'); clear sourceLocOut source2Plot sourceLocOutBase source2PlotBase;
+        %hcp_write_matlab(saveFnameData,'source');
+        clear sourceLocOut source2Plot sourceLocOutBase source2PlotBase;
         % save it as a cifti file
         hcp_write_cifti([saveFnameData,'.',outparameter],source, 'parameter', outparameter, 'type', sourcetype,'precision','double');  clear source;
         
@@ -1071,11 +1079,12 @@ intCfg.parameter = 'avg.pow';
 
 %----------------------------------------------------------------
 % Define the plot color limits
-[maxabsVal,maxabsInd]=max(abs(dumSrc.avg.pow(dumSrc.inside)));
-maxabsIndTot=dumSrc.inside(maxabsInd);
+inIndices=find(dumSrc.inside);
+[maxabsVal,maxabsInd]=max(abs(dumSrc.avg.pow(inIndices)));
+maxabsIndTot=inIndices(maxabsInd);
 
-[minVal,minInd]=min((dumSrc.avg.pow(dumSrc.inside)));
-[maxVal,maxInd]=max((dumSrc.avg.pow(dumSrc.inside)));
+[minVal,minInd]=min((dumSrc.avg.pow(inIndices)));
+[maxVal,maxInd]=max((dumSrc.avg.pow(inIndices)));
 if sign(maxVal)~=sign(minVal)
     subclim=0.75*maxabsVal*[-1 1];
     %subAlim=0.05*maxabsVal*[-1 1];
@@ -1169,11 +1178,12 @@ end
 
 %--------------------------------------------------------
 % Define plot color limits
-[maxabsVal,maxabsInd]=max(abs(dumSrc.avg.pow(dumSrc.inside)));
-maxabsIndTot=dumSrc.inside(maxabsInd);
+inIndices=find(dumSrc.inside);
+[maxabsVal,maxabsInd]=max(abs(dumSrc.avg.pow(inIndices)));
+maxabsIndTot=inIndices(maxabsInd);
 
-[minVal,minInd]=min((dumSrc.avg.pow(dumSrc.inside)));
-[maxVal,maxInd]=max((dumSrc.avg.pow(dumSrc.inside)));
+[minVal,minInd]=min((dumSrc.avg.pow(inIndices)));
+[maxVal,maxInd]=max((dumSrc.avg.pow(inIndices)));
 if sign(maxVal)~=sign(minVal)
     subclim=0.75*maxabsVal*[-1 1];
 else

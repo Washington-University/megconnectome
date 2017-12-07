@@ -159,13 +159,14 @@ for i=1:size(mixing,2)
   noisevec(i) = cfg.mne.snr;
   
   tmp = ft_sourceanalysis(cfg, tlck);
+  inside_indices = find(tmp.inside(:))';
   if i==1
     % create the output source structure in the first iteration
     source=tmp;
   else
     % concatenate the reconstructed source level topography to the previously computed ones
-    for k = 1:numel(tmp.inside)
-      source.avg.mom{source.inside(k)} = cat(2,source.avg.mom{source.inside(k)}, tmp.avg.mom{source.inside(k)});
+    for k = 1:numel(inside_indices)
+      source.avg.mom{inside_indices(k)} = cat(2,source.avg.mom{inside_indices(k)}, tmp.avg.mom{inside_indices(k)});
     end
     source.avg.pow = horzcat(source.avg.pow,tmp.avg.pow);
   end

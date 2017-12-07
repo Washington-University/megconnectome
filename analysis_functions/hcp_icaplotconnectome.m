@@ -2,46 +2,86 @@ function []=hcp_icaplotconnectome(connectome, sourcemodel2d, options)
 
 outputfile=ft_getopt(options, 'outputfile');
 sortindx=ft_getopt(options, 'sorting','yes');
-atlas_label=ft_getopt(options, 'parcel_type','RSN');
 rm_wall=ft_getopt(options, 'mask', 'yes');
 rm_dist=ft_getopt(options, 'mask_edist','yes');
 edist_radius=ft_getopt(options, 'edist_radius', 3.5);
 plot_parc=ft_getopt(options, 'plot_parc','yes');
 color_extr=ft_getopt(options, 'color_extr');
 fig_type=ft_getopt(options, 'fig_type','png');
+yeo_mode=ft_getopt(options, 'yeo_mode',[]);
 
 if strcmp(sortindx,'yes')
-    if strcmp(atlas_label,'RSN')
-        atlas_rsn_l=ft_read_atlas('RSN-networks.L.4k_fs_LR.label.gii');
-        atlas_rsn_r=ft_read_atlas('RSN-networks.R.4k_fs_LR.label.gii');
-        ordering_n=[4 7 8 15 25 5 17 16 6 21 12 14 3 10 20 11 18 26 13 22 23 27 24 9 19 2 1];
-        atlaslabel_rtemp=atlas_rsn_r.parcellation4label; atlasindex_r=atlas_rsn_r.parcellation4;
-        for it=1:numel(atlaslabel_rtemp) ; atlaslabel_r{it}=atlaslabel_rtemp{ordering_n(it)} ; end 
-        atlaslabel_ltemp=atlas_rsn_l.parcellation4label; atlasindex_l=atlas_rsn_l.parcellation4;
-        for it=1:numel(atlaslabel_ltemp) ; atlaslabel_l{it}=atlaslabel_ltemp{ordering_n(it)} ; end 
-
-    elseif strcmp(atlas_label,'VGD11b')
-        atlas_rsn_l=ft_read_atlas('parcellations_VGD11b.L.4k_fs_LR.label.gii');
-        atlas_rsn_r=ft_read_atlas('parcellations_VGD11b.R.4k_fs_LR.label.gii');
-        atlaslabel_r=atlas_rsn_r.parcellation2label; atlasindex_r=atlas_rsn_r.parcellation2;
-        atlaslabel_l=atlas_rsn_l.parcellation2label; atlasindex_l=atlas_rsn_l.parcellation2;
-        ordering_n=[1:numel(atlaslabel_r)];
+    
+    % reading Yeo parcellation for vertex ordering
+    atlas_yeo=ft_read_cifti('Yeo2011_17Networks.LR.min50sqmm.4k_fs_LR.dlabel.nii');
+    
+    if ~isempty(yeo_mode) & strcmp(yeo_mode,'compact')
+    % ordering of the Yeo 17Networks as will be displayed (DMN, MOT, FP, DAN ...)
+    ordering_n=[17 18 16 4 5 15 9 12 13 14 7 6 8 10 11 2 3 1];
+    
+    NetLabels={ 'Medial_Wall'
+        '17Networks_1_VIS_1'
+        '17Networks_2_VIS_2'
+        '17Networks_3_MOT_1'
+        '17Networks_4_MOT_2'
+        '17Networks_5_DAN_2'
+        '17Networks_6_DAN_1'
+        '17Networks_7_VAN_1'
+        '17Networks_8_FP_1'
+        '17Networks_9_LIM_1'
+        '17Networks_10_LIM_2'
+        '17Networks_11_FP_2'
+        '17Networks_12_FP_3'
+        '17Networks_13_FP_4'
+        '17Networks_14_MOT_3'
+        '17Networks_15_DMN_3'
+        '17Networks_16_DMN_1'
+        '17Networks_17_DMN_2'};
+    
+    % assign to each parcel (patch) the corresponding original 17Network parcel
+    parcel_net= [0 2 16 16 16 16 0 0 6 6 6 6 12 12 12 12 12 12 10 5 13 13 13 13 13 13 13 ...
+        17 17 17 17 17 17 15 15 15 1 4 9 11 11 3 8 8 8 8 8 8 7 7 7 7 14 14 ...
+        2 16 16 16 16 16 16 0 0 6 6 6 6 12 12 12 12 12 12 10 6 5 13 13 13 13 13 ...
+        17 17 17 17 17 15 15 15 1 4 9 11 11 11 3 8 8 8 8 8 8 7 7 7 7 14 14];
+    
+    atlasindex=zeros(numel(atlas_yeo.x1),1);
+    
+    for i=0:17
+        
+        indextmp=find(parcel_net==i)-1 ;
+        
+        index_parcels=[];
+        
+        for ipar=1:numel(indextmp)
+            junk=find(atlas_yeo.x1==indextmp(ipar));
+            index_parcels=[index_parcels' junk']';
+            
+            atlasindex(index_parcels,1)=repmat(i,numel(index_parcels),1);
+            
+            
+        end
+        
     end
+    else
+        ordering_n=[1:numel(atlas_yeo.x1label)+1];
+        NetLabels{1}='Medial_Wall';
+        for ij=1:numel(atlas_yeo.x1label) ; NetLabels{ij+1}=atlas_yeo.x1label{ij}; end
+        atlasindex=atlas_yeo.x1;
+    end
+    
+    for it=1:numel(NetLabels) ; atlaslabel{it}=NetLabels{ordering_n(it)} ; end
     
     indexvoxels=[];
     jn=0;
-    for in=1:numel(atlaslabel_r)
+    for in=1:numel(atlaslabel)
         jn=jn+1;
-        networkl{jn}=atlaslabel_r{in};
-%         nindxl=find(strcmp(atlaslabel_l,atlaslabel_r{in}));
-        nindxl=ordering_n(in);         nindxr=ordering_n(in); 
-        if ~isempty(nindxl)
-            indexvoxels=[indexvoxels ; find(atlasindex_l==nindxl)];
-            indxvoxels_net{jn}=find(atlasindex_l==nindxl);
+        networkl{jn}=atlaslabel{in};
+        nindx=ordering_n(in)-1;
+        if ~isempty(nindx)
+            indexvoxels=[indexvoxels ; find(atlasindex==nindx)];
+            indxvoxels_net{jn}=find(atlasindex==nindx);
         end
-        indexvoxels=[indexvoxels ; (find(atlasindex_r==nindxr)+numel(atlasindex_l))];
-        indxvoxels_net{jn}=[indxvoxels_net{jn} ; (find(atlasindex_r==nindxr)+numel(atlasindex_l))];
-        label_net_n{jn}=atlaslabel_r{in};
+        label_net_n{jn}=atlaslabel{in};
         if (jn==1)
             net_max(jn,:)=[1 numel(indexvoxels)];
         else
@@ -60,10 +100,8 @@ if strcmp(rm_dist,'yes')
 end
 
 if strcmp(rm_wall,'yes')
-    load('parcellations_VGD11b_4k.mat')
-    mask1_wall=find(strcmp(atlas.parcellation2label,'L_MEDIAL.WALL'));
-    mask2_wall=find(strcmp(atlas.parcellation2label,'R_MEDIAL.WALL'));
-    mask_wall=[find(atlas.parcellation2==mask1_wall); find(atlas.parcellation2==mask2_wall)];
+    mask1_wall=find(strcmp(NetLabels,'Medial_Wall'))-1;
+    mask_wall=[find( atlasindex==mask1_wall)];
     connectome(mask_wall,:)=NaN;
     connectome(:,mask_wall)=NaN;
 end
@@ -91,14 +129,25 @@ if strcmp(plot_parc,'yes')
             connect_parc(ip,jp)=nanmean(nanmean(connectome_ordered(net_max(ip,1):net_max(ip,2),net_max(jp,1):net_max(jp,2))));
         end
     end
+    
+    saveparc='no';
+    if(strcmp(saveparc,'yes'))
+        fname = [outputfile '_parc'];
+        save(fname,'connect_parc')
+    end
+    
+    connect_parc=connect_parc(1:end-1,1:end-1);
+    
     figure
     h=imagesc(connect_parc);
     set(h,'alphadata',~isnan(connect_parc))
     caxis(color_extr)
     colorbar
     imgname = [outputfile '_parc' '.' fig_type];
+    if(numel(networkl)<20)
     set(gca,'ytick',[1:numel(networkl)])
     set(gca,'yticklabel',networkl)
+    end
     hcp_write_figure(imgname, gcf)
     
     close all
