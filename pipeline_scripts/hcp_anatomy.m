@@ -54,8 +54,8 @@ else
     hrmrifile      = fullfile(structuralpreprocdir, 'T1w', 'T1w_acpc_dc_restore.nii.gz');
     inputsurffile  = fullfile(structuralpreprocdir, 'T1w', 'fsaverage_LR32k', [subjectid,'.L.midthickness.32k_fs_LR.surf.gii']);
     inputsphere    = fullfile(structuralpreprocdir, 'MNINonLinear', 'fsaverage_LR32k', [subjectid,'.L.sphere.32k_fs_LR.surf.gii']);
-    outputsphere   = fullfile(outputdir, 'Sphere.8k.L.surf.gii');
-    outputsurffile = fullfile(outputdir, [subjectid,'.L.midthickness.8k_fs_LR.surf.gii']);
+    outputsphere   = fullfile(outputdir, 'Sphere.4k.L.surf.gii');
+    outputsurffile = fullfile(outputdir, [subjectid,'.L.midthickness.4k_fs_LR.surf.gii']);
 end
 
 % the following flags pertain to the three main parts of the pipeline
@@ -860,10 +860,10 @@ if dopipeautomatic,
         
         figure;
         options = {'transform',mri.transform,'intersectmesh',{sourcemodel2d headmodel.bnd}};
-        subplot(2,2,1); hold on; ft_plot_slice(mri.anatomy, 'location', [0  0 60], 'orientation', [0 0 1], options{:}); view(0,90);
-        subplot(2,2,2); hold on; ft_plot_slice(mri.anatomy, 'location', [0  0 20], 'orientation', [0 0 1], options{:}); view(0,90);
-        subplot(2,2,3); hold on; ft_plot_slice(mri.anatomy, 'location', [0 20  0], 'orientation', [1 0 0], options{:}); view(90,0);
-        subplot(2,2,4); hold on; ft_plot_slice(mri.anatomy, 'location', [0 20  0], 'orientation', [0 1 0], options{:}); view(0,0);
+        subplot(2,2,1); hold on; hcp_plot_slice(mri.anatomy, 'location', [0  0 60], 'orientation', [0 0 1], options{:}); view(0,90);
+        subplot(2,2,2); hold on; hcp_plot_slice(mri.anatomy, 'location', [0  0 20], 'orientation', [0 0 1], options{:}); view(0,90);
+        subplot(2,2,3); hold on; hcp_plot_slice(mri.anatomy, 'location', [0 20  0], 'orientation', [1 0 0], options{:}); view(90,0);
+        subplot(2,2,4); hold on; hcp_plot_slice(mri.anatomy, 'location', [0 20  0], 'orientation', [0 1 0], options{:}); view(0,0);
         set(gcf, 'Renderer', 'zbuffer')
         hcp_write_figure([outputprefix,'_sourcemodel_2d.png']);
 
@@ -871,17 +871,17 @@ if dopipeautomatic,
            'intersectlinewidth',1,'slicesize',[300 300]};
 
         figure;
-        ft_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [0 0 1], 'slicerange', [-20 120], options{:});
+        hcp_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [0 0 1], 'slicerange', [-20 120], options{:});
         set(gcf, 'Renderer', 'zbuffer');   
         hcp_write_figure([outputprefix,'_slice1.png'], 'resolution', 300);
 
         figure;
-        ft_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [0 1 0], 'slicerange', [-60 60], options{:});
+        hcp_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [0 1 0], 'slicerange', [-60 60], options{:});
         set(gcf, 'Renderer', 'zbuffer');
         hcp_write_figure([outputprefix,'_slice2.png'], 'resolution', 300);
 
         figure;
-        ft_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [1 0 0], 'slicerange', [-70 110], options{:});
+        hcp_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [1 0 0], 'slicerange', [-70 110], options{:});
         set(gcf, 'Renderer', 'zbuffer');
         hcp_write_figure([outputprefix,'_slice3.png'], 'resolution', 300);
         

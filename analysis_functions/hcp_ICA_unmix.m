@@ -74,34 +74,35 @@ for j = 1:ica_iterations
     cfg.fastica.initGuess = randn(numel(data_meg.label));
     
     comp = hcp_componentanalysis(cfg, data_meg);
-%     A    = comp.topo;
-%     W    = comp.unmixing;
-%     
-%     [chan, Nc] = size(A);
-    [chan, Nc] = size(comp.topo);
-    comp.order    = [1:Nc];
-%     
-%     %%% Ordering ICs according to the Power
-%     if Nc > 0
-%         power          = mean(A.^2);
-%         [~, order] = sort(power, 'descend');
-%         
-%         A = A(:,order);
-%         W = W(order,:);
-%     end
-%     
-%     comp.order    = order;
-%     comp.topo     = A;
-%     comp.unmixing = W;
-%     if strcmp(saveIC,'yes')
-%         for iic=1:size(comp.sampleinfo,1), comp.trial{iic} = comp.trial{iic}(order,:); end
-%     else
-    if strcmp(saveIC,'no')
-        comp = rmfield(comp, 'trial');
-        comp = rmfield(comp, 'time');
+    %     A    = comp.topo;
+    %     W    = comp.unmixing;
+    %
+    %     [chan, Nc] = size(A);
+    if ~isempty(comp)
+        [chan, Nc] = size(comp.topo);
+        comp.order    = [1:Nc];
+        %
+        %     %%% Ordering ICs according to the Power
+        %     if Nc > 0
+        %         power          = mean(A.^2);
+        %         [~, order] = sort(power, 'descend');
+        %
+        %         A = A(:,order);
+        %         W = W(order,:);
+        %     end
+        %
+        %     comp.order    = order;
+        %     comp.topo     = A;
+        %     comp.unmixing = W;
+        %     if strcmp(saveIC,'yes')
+        %         for iic=1:size(comp.sampleinfo,1), comp.trial{iic} = comp.trial{iic}(order,:); end
+        %     else
+        if strcmp(saveIC,'no')
+            comp = rmfield(comp, 'trial');
+            comp = rmfield(comp, 'time');
+        end
     end
-    
     iteration(j).comp = comp; % structure containing all the iterations
     clear comp
-%     clear comp A W IC power
+    %     clear comp A W IC power
 end

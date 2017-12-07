@@ -116,7 +116,7 @@ comp_class.class.brain_ic_vs=unique(comp_class.class.brain_ic_vs);
 
 for i=1:size(bad,2)
     [junk indxb]=find(comp_class.class.brain_ic_vs==bad(1,i))
-    comp_class.class.brain_ic_vs(indxb)=[]
+    comp_class.class.brain_ic_vs(indxb)=[];
 end
 comp_class.class.brain_ic_vs_number=size(comp_class.class.brain_ic_vs,2);
 

@@ -9,7 +9,7 @@ function    [trl,trlInfoColDescr,trialSummary,scanStartSamp,scanEndSamp,warninfo
 % 1. mnemonic: TIM.     description: Onset of an image that the subject has.to match or not with the target image.
 % 2. mnemonic: TRESP. 	description: Onset of button press by the subject.
 %
-% 
+%
 % INPUT VARIABLE
 %----------------------------------
 % cfg : This is a structure containing information required for extracting
@@ -24,15 +24,15 @@ function    [trl,trlInfoColDescr,trialSummary,scanStartSamp,scanEndSamp,warninfo
 %                                                                      %  according to the desired data group
 %                          .trialdef.cutMode = 'trials';               % This representes that data will be cut in trials
 %                                                                      %  and not in blocks. The same for both data groups
-%                          .trialdef.preStimTime = 1.5;                % Time interval prior to 0 reference point for each trial 
-%                          .trialdef.postStimTime = 2.5;               % Time interval after the 0 reference point for each trial 
+%                          .trialdef.preStimTime = 1.5;                % Time interval prior to 0 reference point for each trial
+%                          .trialdef.postStimTime = 2.5;               % Time interval after the 0 reference point for each trial
 %
 %
 % OUTPUT VARIABLES
 %-----------------------------------
 % trl: This is a numerical matrix.  Each column corresponds to a trial and
 %      each column to a specific condition of piece of information, quantified numerically , regarding
-%      each trial. The first 3 Columns describe the trial start sample, end sample and time offset 
+%      each trial. The first 3 Columns describe the trial start sample, end sample and time offset
 %      of the start of the trial relative to the 0 reference point. These 3
 %      columns are used by fieldtrip as the necessary information required
 %      to extract the data for each trial.
@@ -42,7 +42,7 @@ function    [trl,trlInfoColDescr,trialSummary,scanStartSamp,scanEndSamp,warninfo
 %
 % trlInfoColDescr: This is a cell array. Each element is a string
 %                  describing the type of information encoded by the corresponding column of
-%                  the 'trialinfo' part of trl matrix described above. 
+%                  the 'trialinfo' part of trl matrix described above.
 %
 % trialSummary:    This is a structure containing an overview of the breakdown of the data
 %                  in trials of the main conditions for BOTH data groups.
@@ -60,7 +60,7 @@ function    [trl,trlInfoColDescr,trialSummary,scanStartSamp,scanEndSamp,warninfo
 %
 %
 % Below is presented, for convenience of the reader, the description of
-% each column of the 'trialinfo' part of trl matrix described above and 
+% each column of the 'trialinfo' part of trl matrix described above and
 % contained in the trlInfoColDescr output variable. The description is the
 % same for both TIM and TRESP data groups.
 %
@@ -130,44 +130,44 @@ function    [trl,trlInfoColDescr,trialSummary,scanStartSamp,scanEndSamp,warninfo
 % The remaining 39 columns are:
 %===== COLUMNS:
 trlColDescr={'1. Run Number'
-'2. Block Number within run'
-'3. Nan.  ( This column has been reserved to contain the image ID number which is not encoded in the trigger values. This is not yet implemented.)'
-'4. imgType : 1- Face, 2- Tools  0- Fixation'
-'5. memoryType :  1: 0-Back   2: 2-Back'
-'6. targetType : 1- target, 2- nontarget,  3: lure '
-'7. Trial trigger onset Sample '
-'8. Trial trigger offset Sample'
-'9. Sequence of image in the block'
-'10. isPressed :  0- user did not press any response button, 1- user pressed a response button'
-'11. isPressedLate:  1- If subject responded after the 2 seconds that the image is at the longest displayed and before the next  trial \n    0- If pressed within the presentation time of the image\n ,      NaN: Otherwise'
-'12. isDoubleResponse: 1- user pressed two response buttons in the same trial \n    0: user DID NOT press two response buttons in the same trial'
-'13. pressedCode: Code of the pressed button (If not pressed NaN)'
-'14. isCorrect:  1- If subject has responded that saw a target when a actual target was on or that saw a nontarget when a actual nontarget was on \n      0:  The opposite of the above.\n      NaN:  When subject has not responded or has pressed two  buttons'
-'15. isLureAsCorrect: 1- If subject has responded that saw a target when a lure image of actual target was on \n , 0: In all other cases that a subject has responded\n  NaN:  When subject has not responded or has pressed two buttons'
-'16. respTime: The time from onset of Image to response (sec)'
-'17. respDuration: Duration of button press in seconds'
-'18. isFirstInBlock'
-'19. isLastInBlockk'
-'20. prev. Trial: Run Number'
-'21. prev. Trial: Block Number'
-'22. prev. Trial: Nan.  ( This column has been reserved to contain the image ID number which is not encoded in the trigger values. This is not yet implemented.)'
-'23. prev. Block: imgType : 1- Face, 2-Tools  0- Fixation'
-'24. prev. Block: memoryType :  1: 0-Back   2: 2-Back'
-'25. prev. Trial: targetType : 1- target, 2- nontarget,  3: lure '
-'26. prev. Trial: Trial start Sample'
-'27. prev. Trial: Trial end Sample'
-'28. prev. Trial: Sequence of image in the block'
-'29. prev. Trial: isPressed :  0- user did not press any response button, 1- user pressed a response button'
-'30. prev. Trial: isPressedLate:  1- If subject responded after the 2 seconds that the image is at the longest displayed and before the next  trial \n    0- If pressed within the presentation time of the image\n ,      NaN: Otherwise'
-'31. prev. Trial: isDoubleResponse: 1- user pressed two response buttons in the same trial \n    0: user DID NOT press two response buttons in the same trial'
-'32. prev. Trial: pressedCode: Code of the pressed button (If not pressed NaN)'
-'33. prev. Trial: isCorrect:  1- If subject has responded that saw a target when a actual target was on or that saw a nontarget when a actual nontarget was on \n      0:  The opposite of the above.\n      NaN:  When subject has not responded or has pressed two  buttons'
-'34. prev. Trial:isLureAsCorrect: 1- If subject has responded that saw a target when a lure image of actual target was on \n , 0: In all other cases that a subject has responded\n  NaN:  When subject has not responded or has pressed two buttons'
-'35. prev. Trial: respTime: The time from onset of Image to response (sec)'
-'36. prev. Trial: respDuration: Duration of button press in seconds'
-'37. prev. Trial: isFirstInBlock'
-'38. prev. Trial: isLastInBlock'
-'39. Is button pressed during onset of the stimulus (New field)'};
+    '2. Block Number within run'
+    '3. Nan.  ( This column has been reserved to contain the image ID number which is not encoded in the trigger values. This is not yet implemented.)'
+    '4. imgType : 1- Face, 2- Tools  0- Fixation'
+    '5. memoryType :  1: 0-Back   2: 2-Back'
+    '6. targetType : 1- target, 2- nontarget,  3: lure '
+    '7. Trial trigger onset Sample '
+    '8. Trial trigger offset Sample'
+    '9. Sequence of image in the block'
+    '10. isPressed :  0- user did not press any response button, 1- user pressed a response button'
+    '11. isPressedLate:  1- If subject responded after the 2 seconds that the image is at the longest displayed and before the next  trial \n    0- If pressed within the presentation time of the image\n ,      NaN: Otherwise'
+    '12. isDoubleResponse: 1- user pressed two response buttons in the same trial \n    0: user DID NOT press two response buttons in the same trial'
+    '13. pressedCode: Code of the pressed button (If not pressed NaN)'
+    '14. isCorrect:  1- If subject has responded that saw a target when a actual target was on or that saw a nontarget when a actual nontarget was on \n      0:  The opposite of the above.\n      NaN:  When subject has not responded or has pressed two  buttons'
+    '15. isLureAsCorrect: 1- If subject has responded that saw a target when a lure image of actual target was on \n , 0: In all other cases that a subject has responded\n  NaN:  When subject has not responded or has pressed two buttons'
+    '16. respTime: The time from onset of Image to response (sec)'
+    '17. respDuration: Duration of button press in seconds'
+    '18. isFirstInBlock'
+    '19. isLastInBlockk'
+    '20. prev. Trial: Run Number'
+    '21. prev. Trial: Block Number'
+    '22. prev. Trial: Nan.  ( This column has been reserved to contain the image ID number which is not encoded in the trigger values. This is not yet implemented.)'
+    '23. prev. Block: imgType : 1- Face, 2-Tools  0- Fixation'
+    '24. prev. Block: memoryType :  1: 0-Back   2: 2-Back'
+    '25. prev. Trial: targetType : 1- target, 2- nontarget,  3: lure '
+    '26. prev. Trial: Trial start Sample'
+    '27. prev. Trial: Trial end Sample'
+    '28. prev. Trial: Sequence of image in the block'
+    '29. prev. Trial: isPressed :  0- user did not press any response button, 1- user pressed a response button'
+    '30. prev. Trial: isPressedLate:  1- If subject responded after the 2 seconds that the image is at the longest displayed and before the next  trial \n    0- If pressed within the presentation time of the image\n ,      NaN: Otherwise'
+    '31. prev. Trial: isDoubleResponse: 1- user pressed two response buttons in the same trial \n    0: user DID NOT press two response buttons in the same trial'
+    '32. prev. Trial: pressedCode: Code of the pressed button (If not pressed NaN)'
+    '33. prev. Trial: isCorrect:  1- If subject has responded that saw a target when a actual target was on or that saw a nontarget when a actual nontarget was on \n      0:  The opposite of the above.\n      NaN:  When subject has not responded or has pressed two  buttons'
+    '34. prev. Trial:isLureAsCorrect: 1- If subject has responded that saw a target when a lure image of actual target was on \n , 0: In all other cases that a subject has responded\n  NaN:  When subject has not responded or has pressed two buttons'
+    '35. prev. Trial: respTime: The time from onset of Image to response (sec)'
+    '36. prev. Trial: respDuration: Duration of button press in seconds'
+    '37. prev. Trial: isFirstInBlock'
+    '38. prev. Trial: isLastInBlock'
+    '39. Is button pressed during onset of the stimulus (New field)'};
 %=========================================================================
 blockColDescr={''}; % TODO: IF DATA ARE TO BE EXTRACTED IN BLOCKS THEN FORM THE DESCRIPTION OF THE BLOCKS
 %=========================================================================
@@ -177,12 +177,12 @@ blockColDescr={''}; % TODO: IF DATA ARE TO BE EXTRACTED IN BLOCKS THEN FORM THE 
 datafile=cfg.datafile;
 preStimTime=cfg.trialdef.preStimTime;
 postStimTime=cfg.trialdef.postStimTime;
-cutMode=cfg.trialdef.cutMode;   
+cutMode=cfg.trialdef.cutMode;
 lockedOn=cfg.trialdef.lockedOn;
 
 idealISItime=2.5; % This is used to cut Fixation in a similar fashion as the stim blocks
 %==========================================================================
-%% Read the data file 
+%% Read the data file
 hdr = ft_read_header(datafile);
 Fsample = hdr.Fs;
 trg_resp = ft_read_data(datafile,'chanindx',[1 2],'header',hdr,'eventformat','4d','dataformat','4d');
@@ -260,15 +260,15 @@ end
 %% First Decode Parallel Port Trigger Events
 
 memTypeTrig=[ 4     % 0-Back
-              68    % 2-Back
-              2];   % Fixation 
-          
+    68    % 2-Back
+    2];   % Fixation
+
 imgTypeTrigStep=[ 4   % Face
-                 36]; % Tool
+    36]; % Tool
 
 targTypeTrigStep=[2    % Non-target
-                  4    % Lure
-                  6];  % Target  
+    4    % Lure
+    6];  % Target
 durTimeCue=2.5;
 durTimeImg=2;
 durTimeImgFix=0.5;
@@ -284,12 +284,12 @@ durSampFix15=floor(durTimeFix15*Fsample);
 % Img on trigger  : memTypeTrig+imgTypeTrigStep+targTypeTrigStep
 % Img off trigger : memTypeTrig+imgTypeTrigStep
 
-    
+
 
 %{
 trlColDescr={
 
-%}    
+%}
 NeventsPP=length(indPP_UPDOWN);
 eventPPInfo=nan(NeventsPP,6);
 %{
@@ -303,7 +303,7 @@ Columns:
 '5. Event Sample from PP'
 '6. Event Sample from PhotoDiode
 %}
-    
+
 
 %%
 for iMem=1:length(memTypeTrig), %[ 4     % 0-Back      68    % 2-Back    2];   % Fixation
@@ -343,7 +343,7 @@ for iMem=1:length(memTypeTrig), %[ 4     % 0-Back      68    % 2-Back    2];   %
             %-----------------------------------------------------
             tmpTargTypeTrigStep=tmpImgTypeTrigStep(iImg)+targTypeTrigStep;
             for iTarg=1:length(tmpTargTypeTrigStep), %[2    % Non-target  4    % Lure      6];  % Target
-                indIn=find(ismember(trigPP(indPP_UPDOWN),tmpTargTypeTrigStep(iTarg))); 
+                indIn=find(ismember(trigPP(indPP_UPDOWN),tmpTargTypeTrigStep(iTarg)));
                 %-----------------------------------------------------
                 if isempty(indIn)
                     error('No triggers for Image On Cue were found');
@@ -353,7 +353,7 @@ for iMem=1:length(memTypeTrig), %[ 4     % 0-Back      68    % 2-Back    2];   %
                     eventPPInfo(indIn,2)=iImg;
                     if iTarg==1,
                         eventPPInfo(indIn,4)=2;
-                    elseif iTarg==2,    
+                    elseif iTarg==2,
                         eventPPInfo(indIn,4)=3;
                     elseif iTarg==3
                         eventPPInfo(indIn,4)=1;
@@ -406,7 +406,7 @@ if NeventsPhoto~=NImgEventsPP,
         tmpIndPhoto_UPDOWN=indPhoto_UPDOWN;
         tmpIndPhoto_UPDOWN(unique([indRand indRand+1]))=[];
         indPhoto_UPDOWN=tmpIndPhoto_UPDOWN;
-   else
+    else
         
         if (NeventsPhoto-NImgEventsPP)==2,
             diffTimePhotoUP=(1/Fsample)*diff(indPhoto_UP);
@@ -421,6 +421,73 @@ if NeventsPhoto~=NImgEventsPP,
             indPhoto_UP(1)=[];
             indPhoto_DOWN(1)=[];
             NeventsPhoto=length(indPhoto_UPDOWN);
+            
+        elseif (NeventsPhoto-NImgEventsPP)==-2,
+            % if parralel port has more image events than photodiode then
+            % maybe there are some very short pp pulses corresponding to
+            % some images being presented for some very small interval.
+            
+            diffTimePPupdown=(1/Fsample)*diff(indPPImg_UPDOWN);
+            diffTimePPupdown=diffTimePPupdown(1:2:end);
+            tmpShortThresh=0.5; % 1 sec. If the parallel port pulse is shorter than 0.5 sec then this is a short pulse and there is a chance the photodioed might not have caught it.
+            tmpIndxShort=2*find(diffTimePPupdown<1)-1;
+            if ~isempty(tmpIndxShort),
+                if length(tmpIndxShort)>1,
+                    
+                    error('More than one short PP pulses and it seems that photodiode have missed them. Code at the moment supports only one such event.');
+                    
+                else
+                    
+                    shortIndxUP=indPPImg_UPDOWN(tmpIndxShort);
+                    shortIndxDOWN=indPPImg_UPDOWN(tmpIndxShort+1);
+                    indxShortPhotoUp=find(indPhoto_UP>shortIndxUP,1,'first');
+                    nextPhotoAfterShortIndx=indPhoto_UP(indxShortPhotoUp);
+                    if nextPhotoAfterShortIndx > shortIndxDOWN,
+                        warning('There is a short pulse in Parallel Port and it seems that photodiode missed it.');
+                        %{
+                    tmp_indPhoto_UP=[];
+                    tmp_indPhoto_UP(1:indxShortPhotoUp-1)=indPhoto_UP(1:indxShortPhotoUp-1);
+                    tmp_indPhoto_UP(indxShortPhotoUp)=nan;
+                    tmp_indPhoto_UP(indxShortPhotoUp+1:length(indPhoto_UP)+1)=indPhoto_UP(indxShortPhotoUp:end);
+                
+                    tmp_indPhoto_DOWN=[];
+                    tmp_indPhoto_DOWN(1:indxShortPhotoUp-1)=indPhoto_DOWN(1:indxShortPhotoUp-1);
+                    tmp_indPhoto_DOWN(indxShortPhotoUp)=nan;
+                    tmp_indPhoto_DOWN(indxShortPhotoUp+1:length(indPhoto_DOWN)+1)=indPhoto_DOWN(indxShortPhotoUp:end);
+                    
+                    indxShortPhotoUpDown=find(indPhoto_UPDOWN>shortIndxUP,1,'first');
+                    tmp_indPhoto_UPDOWN=[];
+                    tmp_indPhoto_UPDOWN(1:indxShortPhotoUpDown-1)=indPhoto_UPDOWN(1:indxShortPhotoUpDown-1);
+                    tmp_indPhoto_UPDOWN(indxShortPhotoUpDown:indxShortPhotoUpDown+1)=nan;
+                    tmp_indPhoto_UPDOWN(indxShortPhotoUpDown+2:length(indPhoto_UPDOWN)+2)=indPhoto_UPDOWN(indxShortPhotoUpDown:end);
+                    
+                    indPhoto_UP=tmp_indPhoto_UP;
+                    indPhoto_DOWN=tmp_indPhoto_DOWN;
+                    indPhoto_UPDOWN=tmp_indPhoto_UPDOWN;
+                    NeventsPhoto=length(indPhoto_UPDOWN);
+                        %}
+                        
+                        dummyeventPPInfo=eventPPInfo;
+                        dummyeventPPInfo([rowsPPImg(tmpIndxShort) rowsPPImg(tmpIndxShort)+1],:)=[];
+                        indPP_UPDOWN([rowsPPImg(tmpIndxShort) rowsPPImg(tmpIndxShort)+1])=[];
+                        NeventsPP=length(indPP_UPDOWN);
+                        
+                        eventPPInfo=dummyeventPPInfo;
+                        rowsPPImg=find(ismember(eventPPInfo(:,1),[2 3]))';
+                        NImgEventsPP=length(rowsPPImg);
+                        indPPImg_UPDOWN=eventPPInfo(rowsPPImg,5)';
+                        
+                        
+                        
+                    else
+                        error('There is a short pulse in Parallel Port but there seems to be a complicated case. Must be checked');
+                    end
+                    
+                end
+            else
+                error('There are less photodiode events than parallel port image triggers. This seems to be not due to short PP pulses. Need to check.');
+                
+            end
             
         else
             error('The image onsets-offsets is different in the photodiode and parallel port triggers');
@@ -437,14 +504,14 @@ difThresh=floor((4/60).*Fsample); % 6 monitors refresh frames
 tmpDifPhoto2PP=indPhoto_UPDOWN-indPPImg_UPDOWN;
 
 if  mean(abs(tmpDifPhoto2PP)./Fsample) > (2/60)
-    warning('The avergae difference between Photodiode and Parallel Port Triggers is more than 2 monitor refresh rates.'); 
-    warninfo.dif_ph2pp.avgdelay=mean(abs(tmpDifPhoto2PP)./Fsample);    
+    warning('The avergae difference between Photodiode and Parallel Port Triggers is more than 2 monitor refresh rates.');
+    warninfo.dif_ph2pp.avgdelay=mean(abs(tmpDifPhoto2PP)./Fsample);
 end
 
 indBad=find(abs(tmpDifPhoto2PP)>difThresh);
 if ~isempty(indBad)
-   warning('For some image onset or offset event the difference between Photodiode and Parallel Port Triggers are more than 6 monitor refresh rates.'); 
-   warninfo.dif_ph2pp.samp_longdelay=indPhoto_UPDOWN(indBad);
+    warning('For some image onset or offset event the difference between Photodiode and Parallel Port Triggers are more than 6 monitor refresh rates.');
+    warninfo.dif_ph2pp.samp_longdelay=indPhoto_UPDOWN(indBad);
 end
 eventPPInfo(rowsPPImg,6)=indPhoto_UPDOWN;
 %-----
@@ -462,35 +529,35 @@ if length(find(difNanIndx>1))
     error('The unassigned PP events are not adjacent')
 end
 if max(nanIndx)>2
-       error('Only the first 2 PP events at max can be unassigned')
+    error('Only the first 2 PP events at max can be unassigned')
 end
 
 eventPPInfo(nanIndx,5)=indPP_UPDOWN(nanIndx);%Just fill in the onset sample of unassigned events
 
 if length(nanIndx)==1, % This must be a downward trigger event
     if nanIndx~=1,
-       error('There is one unassigned event , but is not the first one as expected'); 
+        error('There is one unassigned event , but is not the first one as expected');
     else
-       if difTrigPP(eventPPInfo(nanIndx,5)-1)>=0
-          error('There is one unassigned event at the beginning but the trigger is not down going') ;
-       end
+        if difTrigPP(eventPPInfo(nanIndx,5)-1)>=0
+            error('There is one unassigned event at the beginning but the trigger is not down going') ;
+        end
     end
 elseif length(nanIndx)==2
     if ~all(nanIndx==[1 2])
-         error('There are two unassigned events , but are not the first two as expected'); 
+        error('There are two unassigned events , but are not the first two as expected');
     else
         if ~((difTrigPP(indPP_UPDOWN(nanIndx(1))-1)>0)&(difTrigPP(indPP_UPDOWN(nanIndx(2))-1)<0))
             warning('There are two unassigned events at the beginning but the triggers are not up going and then down going') ;
             warninfo.pp.samp_initTrigNotUpDown=[indPP_UPDOWN(nanIndx(1)) indPP_UPDOWN(nanIndx(2))];
         end
-    end  
+    end
 end
 
 if eventPPInfo(end,1)~=4
-   error('The last event should be the start of the last fixation block');
+    error('The last event should be the start of the last fixation block');
 else
     if (eventPPInfo(end,5)+durSampFix15)>Nsamples,
-       error('The last fixation block is not as long as expected(15sec). Scan ends earlier.');
+        error('The last fixation block is not as long as expected(15sec). Scan ends earlier.');
     end
 end
 
@@ -498,9 +565,9 @@ end
 %% If all consistency tests are passed try to read the run number
 runNumber=0;
 if length(nanIndx)==1, % This must be a downward trigger event
-   tmpRunTrig=trigPP(indPP_UPDOWN(nanIndx(1))-1);
+    tmpRunTrig=trigPP(indPP_UPDOWN(nanIndx(1))-1);
 elseif length(nanIndx)==2
-   tmpRunTrig=trigPP(indPP_UPDOWN(nanIndx(2))-1); 
+    tmpRunTrig=trigPP(indPP_UPDOWN(nanIndx(2))-1);
 end
 if tmpRunTrig==130,
     runNumber=1;
@@ -524,14 +591,14 @@ blockPPInfo=eventPPInfo(rowsCueOrFix,:);
 indxBlockOn=blockPPInfo(:,5);
 indxBlockOff=blockPPInfo(2:end,5)-1;
 indxBlockOff(end+1)=indxBlockOn(end)+durSampFix15;
-    
+
 Nblocks=length(indxBlockOn);
 %======================================================
 %% Identify the start and end of scan as the onset of the first block and the end of the last block
 % A default temporal padding of 3 second is used in either end
 defEndPad=floor(3*Fsample);
 scanStartSamp=indxBlockOn(1)-defEndPad;
-if scanStartSamp<1 
+if scanStartSamp<1
     scanStartSamp=1;
 end
 scanEndSamp=indxBlockOff(end)+defEndPad;
@@ -540,35 +607,35 @@ if scanEndSamp>Nsamples,
 end
 %======================================================
 %=======================================================================
- %% GET BASIC TRIALINFO FOR STIM SEQUENCE
-  
+%% GET BASIC TRIALINFO FOR STIM SEQUENCE
+
 totalStimInfo=[];
 countStims=1;
 curBlockNum=0;
 for iEv=1:NeventsPP
-
+    
     if ismember(eventPPInfo(iEv,1),[1 4]),
-       curBlockNum=curBlockNum+1;
-       curStimSeq=1;
-   elseif eventPPInfo(iEv,1)==2,
-         if eventPPInfo(iEv+1,1)~=3
-             error('Image onset is not followed by an image offset');
-         end
-       tmpInfo=[runNumber,...               %1.
-                 curBlockNum ,...           %2.
-                 nan,...                    %3.  % here should be an index refereing to the actual image used
-                 eventPPInfo(iEv,2),...     %4.  
-                 eventPPInfo(iEv,3),...     %5.
-                 eventPPInfo(iEv,4),...     %6.
-                 eventPPInfo(iEv,6),...     %7.
-                 eventPPInfo(iEv+1,6)-1,... %8.
-                 curStimSeq];               %9. %not used. just added for compatibility with glasgow data; Maybe here could be used the sequence of image in the block
-             
-             totalStimInfo=[totalStimInfo; tmpInfo];             
-             curStimSeq=curStimSeq+1;
-   end
-   
-   
+        curBlockNum=curBlockNum+1;
+        curStimSeq=1;
+    elseif eventPPInfo(iEv,1)==2,
+        if eventPPInfo(iEv+1,1)~=3
+            error('Image onset is not followed by an image offset');
+        end
+        tmpInfo=[runNumber,...               %1.
+            curBlockNum ,...           %2.
+            nan,...                    %3.  % here should be an index refereing to the actual image used
+            eventPPInfo(iEv,2),...     %4.
+            eventPPInfo(iEv,3),...     %5.
+            eventPPInfo(iEv,4),...     %6.
+            eventPPInfo(iEv,6),...     %7.
+            eventPPInfo(iEv+1,6)-1,... %8.
+            curStimSeq];               %9. %not used. just added for compatibility with glasgow data; Maybe here could be used the sequence of image in the block
+        
+        totalStimInfo=[totalStimInfo; tmpInfo];
+        curStimSeq=curStimSeq+1;
+    end
+    
+    
 end
 %==============================================
 %% Get Response characteristics
@@ -600,7 +667,7 @@ for iStim=1:Nstims,
         isCorrect=nan;
         isLureAsCorrect=nan;
         respTime=nan;
-        respDur=nan; 
+        respDur=nan;
         isPressedLate=nan;
         
     elseif (isempty(i1))&(isempty(k1)),
@@ -610,7 +677,7 @@ for iStim=1:Nstims,
         isCorrect=nan;
         isLureAsCorrect=nan;
         respTime=nan;
-        respDur=nan; 
+        respDur=nan;
         
         %=======================================
         % Check for late response after the stim is off and before the next
@@ -622,27 +689,27 @@ for iStim=1:Nstims,
             indLateStart=totalStimInfo(iStim,8);
             indLateEnd=Nsamples;
         end
-         tmpLateResp=resp(indLateStart:indLateEnd);
-         lat1=find((tmpLateResp==256)|(tmpLateResp==512));
-         if ~isempty(lat1)
-             isPressedLate=1;
-         else
-             isPressedLate=nan;
-         end
+        tmpLateResp=resp(indLateStart:indLateEnd);
+        lat1=find((tmpLateResp==256)|(tmpLateResp==512));
+        if ~isempty(lat1)
+            isPressedLate=1;
+        else
+            isPressedLate=nan;
+        end
         %=======================================
-    elseif (~isempty(i1))&(isempty(k1)),   
+    elseif (~isempty(i1))&(isempty(k1)),
         isPressed=1;
         isDoubleResponse=0;
         pressedCode=256;
         if totalStimInfo(iStim,6)==1
-             isCorrect=1;
-             isLureAsCorrect=0;
+            isCorrect=1;
+            isLureAsCorrect=0;
         elseif totalStimInfo(iStim,6)==3
-             isCorrect=0;
-             isLureAsCorrect=1;
+            isCorrect=0;
+            isLureAsCorrect=1;
         else
-             isCorrect=0;
-             isLureAsCorrect=0;
+            isCorrect=0;
+            isLureAsCorrect=0;
         end
         respTime=j1(1)*(1./hdr.Fs);
         [d1,d2]=find(tmpDifResp(j1(1):end)<0,1,'first');
@@ -652,19 +719,19 @@ for iStim=1:Nstims,
         respDur=d2*(1./hdr.Fs);
         isPressedLate=0;
         
-    elseif (isempty(i1))&(~isempty(k1)),   
+    elseif (isempty(i1))&(~isempty(k1)),
         isPressed=1;
         isDoubleResponse=0;
         pressedCode=512;
         if totalStimInfo(iStim,6)>1
-             isCorrect=1;
-             isLureAsCorrect=0;
+            isCorrect=1;
+            isLureAsCorrect=0;
         elseif totalStimInfo(iStim,6)==1
-             isCorrect=0;
-             isLureAsCorrect=0;
+            isCorrect=0;
+            isLureAsCorrect=0;
         else
-             isCorrect=0;
-             isLureAsCorrect=0;
+            isCorrect=0;
+            isLureAsCorrect=0;
         end
         respTime=l1(1)*(1./hdr.Fs);
         [d1,d2]=find(tmpDifResp(k1(1):end)<0,1,'first');
@@ -675,16 +742,16 @@ for iStim=1:Nstims,
         isPressedLate=0;
     end
     %-----------------------------------------------------
-            totalStimInfo(iStim,10)=isPressed;
-            totalStimInfo(iStim,11)=isPressedLate;
-            totalStimInfo(iStim,12)=isDoubleResponse;
-            totalStimInfo(iStim,13)=pressedCode;
-            totalStimInfo(iStim,14)=isCorrect;
-            totalStimInfo(iStim,15)=isLureAsCorrect;
-            totalStimInfo(iStim,16)=respTime;
-            totalStimInfo(iStim,17)=respDur;
-            
-            totalStimInfo(iStim,39)=isPressedOnOnset; % New field to check if the button is pressed when the stim comes on; Appended to the end of the original list
+    totalStimInfo(iStim,10)=isPressed;
+    totalStimInfo(iStim,11)=isPressedLate;
+    totalStimInfo(iStim,12)=isDoubleResponse;
+    totalStimInfo(iStim,13)=pressedCode;
+    totalStimInfo(iStim,14)=isCorrect;
+    totalStimInfo(iStim,15)=isLureAsCorrect;
+    totalStimInfo(iStim,16)=respTime;
+    totalStimInfo(iStim,17)=respDur;
+    
+    totalStimInfo(iStim,39)=isPressedOnOnset; % New field to check if the button is pressed when the stim comes on; Appended to the end of the original list
     
 end
 
@@ -693,11 +760,11 @@ end
 %==========================================
 %% Mark the first and the last in Block
 for iBlock=1:Nblocks
- [i1,j1]=find(totalStimInfo(:,2)==iBlock);  
- if ~isempty(i1)
-    totalStimInfo(i1(1),18)=1;   
-    totalStimInfo(i1(end),19)=1;   
- end
+    [i1,j1]=find(totalStimInfo(:,2)==iBlock);
+    if ~isempty(i1)
+        totalStimInfo(i1(1),18)=1;
+        totalStimInfo(i1(end),19)=1;
+    end
 end
 
 
@@ -713,11 +780,11 @@ totalStimInfo(:,20:38)=pastTrialInfo;
 % previous are known. What can be usefull information is what was the
 % memory and image type of the preceding block within the run.
 for iBlock=2:Nblocks
- [i1,j1]=find(totalStimInfo(:,2)==iBlock);  
- if ~isempty(i1)
-    totalStimInfo(i1,23)=blockPPInfo(iBlock-1,2);   
-    totalStimInfo(i1,24)=blockPPInfo(iBlock-1,3);      
- end
+    [i1,j1]=find(totalStimInfo(:,2)==iBlock);
+    if ~isempty(i1)
+        totalStimInfo(i1,23)=blockPPInfo(iBlock-1,2);
+        totalStimInfo(i1,24)=blockPPInfo(iBlock-1,3);
+    end
 end
 
 %====================================================
@@ -726,7 +793,7 @@ end
 %====================================================
 %====================================================
 %====================================================
-%============================================================== 
+%==============================================================
 %==============================================================
 %==============================================================
 %% Fixation  BLocks
@@ -741,12 +808,12 @@ end
 
 totalBlockFixInfo=[];
 for iBlock=1:Nblocks,
-
+    
     if blockPPInfo(iBlock,1)==4,
-       
+        
         
         if iBlock>1,
-           prevInfo= blockPPInfo(iBlock-1,[2:3]);
+            prevInfo= blockPPInfo(iBlock-1,[2:3]);
         else
             prevInfo=[nan nan];
         end
@@ -797,12 +864,19 @@ for iBlock=1:Nblocks,
         totalBlockStimInfo(countStimBlocks,5)=totalStimInfo(i1(1),24);
         totalBlockStimInfo(countStimBlocks,6)=indxBlockOn(iBlock);
         totalBlockStimInfo(countStimBlocks,7)=indxBlockOff(iBlock);
-        totalBlockStimInfo(countStimBlocks,8:17)=totalStimInfo(i1,7);
-        totalBlockStimInfo(countStimBlocks,18:27)=totalStimInfo(i1,6); 
-        totalBlockStimInfo(countStimBlocks,28:37)=totalStimInfo(i1,14); % create a binary structure 1 for target , 0 otherwise
+        if length(i1)==10
+            totalBlockStimInfo(countStimBlocks,8:17)=totalStimInfo(i1,7);
+            totalBlockStimInfo(countStimBlocks,18:27)=totalStimInfo(i1,6);
+            totalBlockStimInfo(countStimBlocks,28:37)=totalStimInfo(i1,14); % create a binary structure 1 for target , 0 otherwise
+        else
+            tmpNtrls=length(i1);
+            totalBlockStimInfo(countStimBlocks,8:8+tmpNtrls-1)=totalStimInfo(i1,7);
+            totalBlockStimInfo(countStimBlocks,18:18+tmpNtrls-1)=totalStimInfo(i1,6);
+            totalBlockStimInfo(countStimBlocks,28:28+tmpNtrls-1)=totalStimInfo(i1,14); % create a binary structure 1 for target , 0 otherwise
+        end
         
         countStimBlocks=countStimBlocks+1;
-    
+        
     end
     
 end
@@ -824,54 +898,54 @@ halfISIsamps=floor(idealISIsamps./2);
 psFixTrialInfo=[];
 for iFixTrl=1:size(fixTrialInfo,1),
     indxStart   = fixTrialInfo(iFixTrl,7)+halfISIsamps;
-        indxEnd     = fixTrialInfo(iFixTrl,8)-halfISIsamps;
-        psixtrl=[indxStart:idealISIsamps:indxEnd];
-        tmpNtrials=length(psixtrl);
-        
-        tmpinfo=repmat(fixTrialInfo(iFixTrl,:),tmpNtrials,1);
-        tmpinfo=[psixtrl'-preStimSamples psixtrl'+postStimSamples -preStimSamples*ones(tmpNtrials,1) tmpinfo];
+    indxEnd     = fixTrialInfo(iFixTrl,8)-halfISIsamps;
+    psixtrl=[indxStart:idealISIsamps:indxEnd];
+    tmpNtrials=length(psixtrl);
     
-         psFixTrialInfo=[psFixTrialInfo; tmpinfo];
+    tmpinfo=repmat(fixTrialInfo(iFixTrl,:),tmpNtrials,1);
+    tmpinfo=[psixtrl'-preStimSamples psixtrl'+postStimSamples -preStimSamples*ones(tmpNtrials,1) tmpinfo];
+    
+    psFixTrialInfo=[psFixTrialInfo; tmpinfo];
     
 end
- [i1,j1]=find(psFixTrialInfo(:,2)>Nsamples);
- if ~isempty(i1)
-     psFixTrialInfo(i1,:)=[];
- end
- [i1,j1]=find(psFixTrialInfo(:,1)<1);
-  if ~isempty(i1)
-     psFixTrialInfo(i1,:)=[];
- end
+[i1,j1]=find(psFixTrialInfo(:,2)>Nsamples);
+if ~isempty(i1)
+    psFixTrialInfo(i1,:)=[];
+end
+[i1,j1]=find(psFixTrialInfo(:,1)<1);
+if ~isempty(i1)
+    psFixTrialInfo(i1,:)=[];
+end
 %==================================================
 
 %============================================================
 %% ------------CREATE OUTPUT
 %=========================================================================
 trl=[];
-if strcmp(cutMode,'trials'),    
-outTrialInfo=totalStimInfo;
-if strcmp(lockedOn,'Image')
-    trlStims=[outTrialInfo(:,7)-preStimSamples outTrialInfo(:,7)+postStimSamples -repmat(preStimSamples,size(outTrialInfo,1),1)  outTrialInfo];
-    trl=[trlStims; psFixTrialInfo];
-elseif strcmp(lockedOn,'Response')
-    outTrialInfo=outTrialInfo((logical(outTrialInfo(:,10)))&(~logical(outTrialInfo(:,12)))&(~logical(outTrialInfo(:,39))),:);        
-    trlStims=[outTrialInfo(:,7)+floor(hdr.Fs*outTrialInfo(:,16))-preStimSamples outTrialInfo(:,7)+floor(hdr.Fs*outTrialInfo(:,16))+postStimSamples -repmat(preStimSamples,size(outTrialInfo,1),1)  outTrialInfo];
-    trl=[trlStims; psFixTrialInfo];
-end
-
-trlInfoColDescr=trlColDescr;
-%===================================================================
+if strcmp(cutMode,'trials'),
+    outTrialInfo=totalStimInfo;
+    if strcmp(lockedOn,'Image')
+        trlStims=[outTrialInfo(:,7)-preStimSamples outTrialInfo(:,7)+postStimSamples -repmat(preStimSamples,size(outTrialInfo,1),1)  outTrialInfo];
+        trl=[trlStims; psFixTrialInfo];
+    elseif strcmp(lockedOn,'Response')
+        outTrialInfo=outTrialInfo((logical(outTrialInfo(:,10)))&(~logical(outTrialInfo(:,12)))&(~logical(outTrialInfo(:,39))),:);
+        trlStims=[outTrialInfo(:,7)+floor(hdr.Fs*outTrialInfo(:,16))-preStimSamples outTrialInfo(:,7)+floor(hdr.Fs*outTrialInfo(:,16))+postStimSamples -repmat(preStimSamples,size(outTrialInfo,1),1)  outTrialInfo];
+        trl=[trlStims; psFixTrialInfo];
+    end
+    
+    trlInfoColDescr=trlColDescr;
+    %===================================================================
 elseif strcmp(cutMode,'blocks'),
     
-   outTrialInfo=totalBlockStimInfo;
-   trl=[outTrialInfo(:,6)-preStimSamples outTrialInfo(:,7)+postStimSamples -repmat(preStimSamples,size(outTrialInfo,1),1)  outTrialInfo];
-
-trlInfoColDescr=blockColDescr;
-
+    outTrialInfo=totalBlockStimInfo;
+    trl=[outTrialInfo(:,6)-preStimSamples outTrialInfo(:,7)+postStimSamples -repmat(preStimSamples,size(outTrialInfo,1),1)  outTrialInfo];
+    
+    trlInfoColDescr=blockColDescr;
+    
 elseif strcmp(cutMode,'fixation'),
-    outTrialInfo=totalBlockFixInfo;  
+    outTrialInfo=totalBlockFixInfo;
     trl=[outTrialInfo(:,5)-preStimSamples outTrialInfo(:,6)+postStimSamples -repmat(preStimSamples,size(outTrialInfo,1),1)  outTrialInfo];
-trlInfoColDescr={''};  
+    trlInfoColDescr={''};
 end
 
 

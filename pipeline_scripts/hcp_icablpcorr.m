@@ -57,6 +57,10 @@ if ~exist('pipelinedatadir', 'var')
     pipelinedatadir = hcp_pathdef;
 end
 
+if ~exist('aband', 'var')
+    aband=[1 2 3 4 5 6 7];
+end
+
 % print the matlab and megconnectome version to screen for provenance
 ver('megconnectome')
 
@@ -77,29 +81,15 @@ cd(pipelinedatadir)
 % execute the pipeline
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-smodel_type = {'2D';'3D'}; dimindx=1; % 1 for 2D cortical sheet and 2 for 3D gird
-griddim = {'4mm';'6mm';'8mm'}; gridindx=1; % $ 1,2,3 for 3D 4mm,6mm and 8mm grid
+hcp_read_matlab([subjectid '_MEG_anatomy_sourcemodel_2d']);
+sourcemodelsubj = sourcemodel2d;
+head=ft_read_headshape([subjectid '.L.midthickness.8k_fs_LR.surf.gii']);
+head2=ft_read_headshape([subjectid '.R.midthickness.8k_fs_LR.surf.gii']);
+sourcemodel=head;
+sourcemodel.pnt=[head.pnt ; head2.pnt];
+sourcemodel.tri=[head.tri ; head2.tri];
 
-if(strcmp(smodel_type{dimindx},'2D'))
-    hcp_read_matlab([subjectid '_MEG_anatomy_sourcemodel_2d']);
-    sourcemodelsubj = sourcemodel2d;
-    sourcemodel_type=smodel_type{dimindx};
-    head=ft_read_headshape([subjectid '.L.midthickness.8k_fs_LR.surf.gii']);
-    head2=ft_read_headshape([subjectid '.R.midthickness.8k_fs_LR.surf.gii']);
-    sourcemodel=head;
-    sourcemodel.pnt=[head.pnt ; head2.pnt];
-    sourcemodel.tri=[head.tri ; head2.tri];
-elseif(strcmp(smodel_type{dimindx},'3D'))
-    %     junk=hcp_read_matlab([subjectid '_anatomy_sourcemodel3D' griddim{gridindx}]);
-    %     gridname = 'sourcemodel3d';
-    %     sourcemodelsubj=junk.(gridname);
-    %     sourcemodelsubj=ft_convert_units(sourcemodelsubj,'mm');
-    
-    hcp_read_matlab(['standard_sourcemodel3d' griddim{gridindx}]);
-    sourcemodel_type=[smodel_type{dimindx} griddim{gridindx}];
-end
 
-bands=[1 2 3 4 5 6 7];
 blp_bands = [ 1.3 4 ; 3 8 ; 6 15 ; 12.5 28.5 ; 30 75 ; 70 150 ; 1 150];
 band_prefix={
     'delta'
@@ -115,7 +105,7 @@ window_corr=25; %window for stationary corr in sec
 Fs=50;
 window_corr2=window_corr*Fs;
 source_blp=[];
-for ib=bands
+for ib=aband
     nwin_tot=0;
     for i_scan=1:3
         clear source_blp
@@ -125,9 +115,11 @@ for ib=bands
         outputfile=[experimentid '_blpcorr_' band_prefix{ib}];
         
         %     hcp_check_pipelineoutput('icapowenv', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid,'band',band_prefix{ib});
-        outstr=[resultprefix '_blp_' sourcemodel_type '_' band_prefix{ib}];
+        outstr=[resultprefix '_icablpenv_' band_prefix{ib}];
         disp(['loading blp file ' outstr])
-        hcp_read_matlab([resultprefix '_blp_' sourcemodel_type '_' band_prefix{ib}])
+        hcp_read_matlab([resultprefix '_icablpenv_' band_prefix{ib}])
+        %         hcp_read_matlab([resultprefix '_blp_2D_' band_prefix{ib}])
+        
         
         if (i_scan==1)
             connect_stat=zeros(size(source_blp.power,1));
@@ -154,8 +146,11 @@ for ib=bands
         nindxl=find(strcmp(atlas_rsn_l.parcellation4label,atlas_rsn_r.parcellation4label{in}));
         if ~isempty(nindxl)
             indxvoxels=[indxvoxels ; find(atlas_rsn_l.parcellation4==nindxl)];
+            indxvoxels_net{jn}=find(atlas_rsn_l.parcellation4==nindxl);
         end
         indxvoxels=[indxvoxels ; (find(atlas_rsn_r.parcellation4==in)+numel(atlas_rsn_l.parcellation4))];
+        indxvoxels_net{jn}=[indxvoxels_net{jn} ; (find(atlas_rsn_r.parcellation4==in)+numel(atlas_rsn_l.parcellation4))];
+        label_net_n{jn}=atlas_rsn_r.parcellation4label{in};
         if (jn==1)
             net_max(jn,:)=[1 numel(indxvoxels)];
         else
@@ -163,11 +158,38 @@ for ib=bands
         end
     end
     
+    netmean_eval='yes';
+    if(strcmp(netmean_eval,'yes'))
+        for imean=1:numel(indxvoxels_net)
+            net_pos=source_blp.pos(indxvoxels_net{imean},:);
+            eudist=squareform(pdist(net_pos));
+            mask_c=find(eudist<3.5);
+            net_matrix=connect_stat(indxvoxels_net{imean},indxvoxels_net{imean});
+            net_matrix_v=net_matrix;
+            net_matrix_v(mask_c)=[];
+            net_corr.mean(imean)=mean(net_matrix_v);
+            net_corr.label{imean}=label_net_n{imean};
+            net_matrix(mask_c)=NaN;
+            h=imagesc(net_matrix);
+            set(h,'alphadata',~isnan(net_matrix))
+            caxis([0 1]); colorbar
+            imgname = [outputfile '_' label_net_n{imean} '.png'];
+            imgname=strrep(imgname,'"','');
+            hcp_write_figure(imgname, gcf)
+            
+            close all
+        end
+        connect.net_corr=net_corr;
+            hcp_write_matlab([outputfile '_mean'],'net_corr')
+
+    end
+
+    
     connect.networkl=networkl;
     connect.connect_stat=connect_stat;
     connect.net_extr=net_max;
     connect.indxvoxels=indxvoxels;
-    hcp_write_matlab(outputfile)
+    hcp_write_matlab(outputfile,'connect')
     
     dofig='yes';
     if strcmp(dofig,'yes')
@@ -177,8 +199,8 @@ for ib=bands
         colorbar
         imgname = [outputfile '.png'];
         hcp_write_figure(imgname, gcf)
-                
-       close all
+        
+        close all
     end
     clear source_blp connect
 end

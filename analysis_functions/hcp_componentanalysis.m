@@ -51,9 +51,12 @@ while restart>0
     tmpcfg.fastica.initGuess = randn(numel(data.label));
     
     if restart>0
-      warning('problem with convergence, restarting the decomposiiton');
+    warning('problem with convergence, restarting the decomposiiton');
     else
-      error('problem with convergence, not restarting any more');
+    comp=[];
+    warning('problem with convergence, not restarting any more');
+    restart = 0;
+    % error('problem with convergence, not restarting any more');
     end
   end % try
 end % while
