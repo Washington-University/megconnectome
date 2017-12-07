@@ -47,79 +47,55 @@ if ~exist('outputdir', 'var')
 end
 
 if ~exist('structuralpreprocdir', 'var')
-    % we cannot use the strucural preprocessing results, revert to old-style
-    % pipeline
+    % we cannot use the strucural preprocessing results, revert to old-style pipeline
     fprintf('not using the high quality structural preprocessing results\n');
 else
     fprintf('using the structural preprocessing results from %s\n', structuralpreprocdir);
-    hrmrifile = fullfile(structuralpreprocdir, 'T1w', 'T1w_acpc_dc_restore.nii');
-    inputsurffile = fullfile(structuralpreprocdir, 'T1w', 'fsaverage_LR32k', [subjectid,'.L.midthickness.32k_fs_LR.surf.gii']);
-    inputsphere   = fullfile(structuralpreprocdir, 'MNINonLinear', 'fsaverage_LR32k', [subjectid,'.L.sphere.32k_fs_LR.surf.gii']);
-    outputsphere  = fullfile(outputdir, 'Sphere.8k.L.surf.gii');
+    hrmrifile      = fullfile(structuralpreprocdir, 'T1w', 'T1w_acpc_dc_restore.nii.gz');
+    inputsurffile  = fullfile(structuralpreprocdir, 'T1w', 'fsaverage_LR32k', [subjectid,'.L.midthickness.32k_fs_LR.surf.gii']);
+    inputsphere    = fullfile(structuralpreprocdir, 'MNINonLinear', 'fsaverage_LR32k', [subjectid,'.L.sphere.32k_fs_LR.surf.gii']);
+    outputsphere   = fullfile(outputdir, 'Sphere.8k.L.surf.gii');
     outputsurffile = fullfile(outputdir, [subjectid,'.L.midthickness.8k_fs_LR.surf.gii']);
 end
 
 % the following flags pertain to the three main parts of the pipeline
-if ~exist('dopipeinteractive', 'var')
-    % for the interactive coregistration
-    dopipeinteractive = 0;
-end
-if ~exist('dopipeautomatic', 'var')
-    % for all other computations
-    dopipeautomatic = 0;
-end
-if ~exist('doqualitycheck', 'var')
-    % for the qualitycheck
-    doqualitycheck = 0;
-end
+if ~exist('dopipeinteractive', 'var'), dopipeinteractive = 0; end
+if ~exist('dopipeautomatic', 'var'),   dopipeautomatic   = 0; end
+if ~exist('doqualitycheck', 'var'),    doqualitycheck    = 0; end
 
 if dopipeinteractive,
-    % we need a pointer to a file in the dicom-series that contain the
-    % T1-weighted anatomical image
-    if ~exist('dofiducials',      'var')
-        dofiducials = 1;
-    end
-    if ~exist('dolandmarks',      'var')
-        dolandmarks = 1;
-    end
+    % set flags to facilitate debugging or running parts of the pipeline
+    if ~exist('dofiducials',      'var'),                dofiducials      = 1; end
+    if ~exist('dolandmarks',      'var'),                dolandmarks      = 1; end
+    if ~exist('docoregistration', 'var'),                docoregistration = 1; end
+    if docoregistration && ~exist('docoreg_spm', 'var'), docoreg_spm      = 1; end
+    if docoregistration && ~exist('docoreg_bti', 'var'), docoreg_bti      = 1; end
+    
+    % specify some default parameters
+    if docoreg_bti && ~exist('docoreg_bti_icp', 'var'),         docoreg_bti_icp         = 1; end
+    if docoreg_bti && ~exist('docoreg_bti_interactive', 'var'), docoreg_bti_interactive = 1; end
+    
+    % perform some checks on conditional presence of some variables
     if (dofiducials || dolandmarks) && ~exist('dicomfile', 'var')
+        % we need a pointer to a file in the dicom-series that contains the T1-weighted anatomical image
         error('for the interactive part of the anatomy pipeline, a pointer to a file from the dicom series is needed');
-    end
-    if ~exist('docoregistration', 'var')
-        docoregistration = 1;
     end
 end
 
 if dopipeautomatic,
     % set flags to facilitate debugging or running parts of the pipeline
-    if ~exist('doheadmodel', 'var')
-        doheadmodel = 1;
-    end
-    if ~exist('dosourcemodel3d', 'var')
-        dosourcemodel3d = 1;
-    end
-    if ~exist('dosourcemodel2d', 'var')
-        dosourcemodel2d = 1;
-    end
-    if ~exist('dofreesurfer', 'var')
-        dofreesurfer = 0;
-    end
-    if ~exist('domnesuite', 'var')
-        domnesuite = 0;
-    end
+    if ~exist('doheadmodel', 'var'),        doheadmodel     = 1; end
+    if ~exist('dosourcemodel3d', 'var'),    dosourcemodel3d = 1; end
+    if ~exist('dosourcemodel2d', 'var'),    dosourcemodel2d = 1; end
+    if ~exist('dofreesurfer', 'var'),       dofreesurfer    = 0; end % this functionality can probably be removed
+    if ~exist('domnesuite', 'var'),         domnesuite      = 0; end % this functionality can probably be removed
     
-    if dosourcemodel3d && ~exist('gridresolution', 'var')
-        % specify a default grid resolution
-        gridresolution = [4 6 8];
-    end
+    % specify some default parameters
+    if dosourcemodel3d && ~exist('gridresolution', 'var'),  gridresolution  = [4 6 8]; end
+    if doheadmodel     && ~exist('headmodelthr', 'var'),    headmodelthr    = 0.5;     end
+    if doheadmodel     && ~exist('headmodelsmooth', 'var'), headmodelsmooth = 5;       end
     
-    if doheadmodel && ~exist('headmodelthr', 'var')
-        headmodelthr = 0.5;
-    end
-    if doheadmodel && ~exist('headmodelsmooth', 'var')
-        headmodelsmooth = 5;
-    end
-    
+    % perform some checks on conditional presence of some variables
     if dosourcemodel2d && ~exist('structuralpreprocdir', 'var') && ~exist('mnepath', 'var')
         error('when computing the cortical sheet based source model the path to MNE-suite software needs to be specified as ''mnepath''');
     end
@@ -130,8 +106,8 @@ if dopipeautomatic,
         error('when computing the cortical sheet based source model a pointer to the directory where the labeling of the surfaces is stored needs to be provided as ''surflabeldir''');
     end
     
-    % we need a pointer to an hs-file
     if docoregistration && ~exist('hsfile', 'var')
+        % we need a pointer to an hs-file
         error('for the automatic coregistration a pointer to an hsfile is needed');
     end
 end
@@ -211,6 +187,9 @@ if dopipeinteractive,
         else
             error('for the automatic part of the anatomy pipeline a nifti file containing the anatomy is needed: run the interactive part of the pipeline first and/or ensure that the nifti file created in this step is in the output directory');
         end
+        mriorig = mri;
+        % mriorig.transform = eye(4); % FIXME does this need to be done?
+        % what when voxels are not isotropic
         
         if exist(textfile_fiducials, 'file')
             hcp_read_ascii(textfile_fiducials);
@@ -223,24 +202,29 @@ if dopipeinteractive,
             error('for the automatic coregistration a textfile with landmark locations needs to exist');
         end
         
-        % check which version of the coregistration needs to be run: if the
-        % option-list contains a key: filename_hr, a high-resolution, ACPC-space
-        % aligned volume exists, use this one for coregistration
+        if exist(textfile_transform, 'file')
+            hcp_read_ascii(textfile_transform);
+        end
         
-        mriorig = mri;
-        % mriorig.transform = eye(4); % FIXME does this need to be done?
-        % what when voxels are not isotropic
-        
-        % do the coregistration to MNI space
-        fprintf('\n');
-        fprintf('Coregistering the anatomy to the axes of the MNI coordinate system\n');
-        fprintf('\n');
-        
-        cfg          = [];
-        cfg.landmark = landmarks;
-        mri          = ft_volumerealign(cfg, mriorig);
-        
-        if exist('hrmrifile', 'var') && exist(hrmrifile, 'file')
+        if docoreg_spm
+          if exist('transform', 'var')
+            % if the transform already exists
+            % scrub the fields that have 'spm' in them
+            fn = fieldnames(transform);
+            removefields = ~cellfun('isempty', strfind(fn, 'spm'));
+            transform    = rmfield(transform, fn(removefields));
+          end
+          
+          % do the coregistration to MNI space
+          fprintf('\n');
+          fprintf('Coregistering the anatomy to the axes of the MNI coordinate system\n');
+          fprintf('\n');
+          
+          cfg          = [];
+          cfg.landmark = landmarks;
+          mri          = ft_volumerealign(cfg, mriorig);
+          
+          if exist('hrmrifile', 'var') && exist(hrmrifile, 'file')
             % coregister the low-resolution MRI to the high resolution in
             % ACPC-space; landmarks are not needed.
             fprintf('\n');
@@ -251,168 +235,238 @@ if dopipeinteractive,
             targetmri = ft_read_mri(hrmrifile);
             targetmri.coordsys = 'spm';
             
-            cfg          = [];
-            cfg.method   = 'spm';
+            cfg             = [];
+            cfg.method      = 'spm';
             cfg.spm.regtype = 'rigid';
-            %cfg.method   = 'fsl';
-            %cfg.fsl.reslice = 'no';
-            %cfg.fsl.searchrange = [-90 90];
-            mri          = ft_volumerealign(cfg, mri, targetmri);
+            mri             = ft_volumerealign(cfg, mri, targetmri);
+            
+            % here make a control figure to check the coregistration
+            % reconstruct the scalp surface from the mris, and overlay them
+            tmpcfg = [];
+            tmpcfg.output = 'scalp';
+            seg           = ft_volumesegment(tmpcfg, mri);
+            seg_target    = ft_volumesegment(tmpcfg, targetmri);
+            
+            tmpcfg = [];
+            tmpcfg             = [];
+            tmpcfg.tissue      = 'scalp';
+            tmpcfg.method      = 'projectmesh';
+            tmpcfg.numvertices = 20000;
+            scalp              = ft_prepare_mesh(tmpcfg, seg);
+            scalp_target       = ft_prepare_mesh(tmpcfg, seg_target);
+            
+            figure;
+            subplot('position',[0.01 0.51 0.48 0.48]);hold on;
+            ft_plot_mesh(scalp,       'edgecolor','none','facecolor','r','facealpha',0.3);
+            ft_plot_mesh(scalp_target,'edgecolor','none','facecolor','b','facealpha',0.3); view(180,-90);
+            plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+            subplot('position',[0.51 0.51 0.48 0.48]);hold on;
+            ft_plot_mesh(scalp,       'edgecolor','none','facecolor','r','facealpha',0.3);
+            ft_plot_mesh(scalp_target,'edgecolor','none','facecolor','b','facealpha',0.3); view(0,90);
+            plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+            subplot('position',[0.01 0.01 0.48 0.48]);hold on;
+            ft_plot_mesh(scalp,       'edgecolor','none','facecolor','r','facealpha',0.3);
+            ft_plot_mesh(scalp_target,'edgecolor','none','facecolor','b','facealpha',0.3); view(90,0);
+            plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+            subplot('position',[0.51 0.01 0.48 0.48]);hold on;
+            ft_plot_mesh(scalp,       'edgecolor','none','facecolor','r','facealpha',0.3);
+            ft_plot_mesh(scalp_target,'edgecolor','none','facecolor','b','facealpha',0.3); view(0,0);
+            plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+            axis on;
+            grid on;
+            set(gcf,'color','w')
+            hcp_write_figure([outputprefix,'_coregistration_lowres2hires.png'], gcf, 'resolution', 300); close all;
             
             transform.vox2spm_interactive = mri.transformorig;
             transform.vox2spm_registered  = mri.transform;
+          end
+          
+          % set the transformation matrix
+          transform.vox2spm = mri.transform;
+          transform.spm2vox = inv(transform.vox2spm);
         end
         
-        % set the transformation matrix
-        transform.vox2spm = mri.transform;
+        if docoreg_bti
+          if exist('transform', 'var'),          
+            % scrub the fields that have 'bti' in them
+            fn = fieldnames(transform);
+            removefields = ~cellfun('isempty', strfind(fn, 'bti'));
+            transform    = rmfield(transform, fn(removefields));
+          end
+
+          fprintf('\n');
+          fprintf('-------------------------------------------------------------------------\n');
+          fprintf('\n');
+          fprintf('Coregistering the anatomy to the axes of the MEG coordinate system\n');
+          fprintf('\n');
+          
+          % do an initial coregistration to BTI space
+          cfg          = [];
+          cfg.fiducial = fiducials;
+          mri          = ft_volumerealign(cfg, mriorig);
+          
+          transform.vox2bti_interactive = mri.transform;
+          
+          % refine the coregistration by doing a icp-based coregistration using
+          % the hs_file and the scalp surface reconstructed from the 1mm anatomy
+          fprintf('\n');
+          fprintf('Refining the coregistration using the headshape file\n');
+          fprintf('\n');
+          
+          cfg           = [];
+          cfg.method    = 'headshape';
+          cfg.headshape.headshape = ft_read_headshape(hsfile);
+          cfg.headshape.icp       = docoreg_bti_icp;
+          cfg.headshape.interactive = docoreg_bti_interactive;
+          % weight the points below the xy-plane and on the forehead more
+          cfg.weights   = ones(size(cfg.headshape.headshape.pnt,1),1);
+          %cfg.weights(cfg.headshape.headshape.pnt(:,3)<0)    = 1.5;
+          %cfg.weights(cfg.headshape.headshape.pnt(:,3)>0.08 & cfg.headshape.headshape.pnt(:,3)<0.1) = 1.5;
+          %cfg.weights(cfg.headshape.headshape.pnt(:,1)>0.05)  = 2;
+          %cfg.weights(cfg.headshape.headshape.pnt(:,1)<-0.05) = 2;
+          cfg.headshape.scalpsmooth = 1;%'no';
+          cfg.headshape.scalpthreshold = 0.08;
+          mri           = ft_volumerealign(cfg, mri);
+          
+          if isfield(mri.cfg.headshape, 'headshape')
+            headshape     = struct(mri.cfg.headshape.headshape); % convert back from config object
+            headshapemri  = struct(mri.cfg.headshape.headshapemri);
+          else
+            % backward compatibility
+            headshape     = struct(mri.cfg.headshape); % convert back from config object
+            headshapemri  = struct(mri.cfg.headshapemri);
+          end
+          headshape.coordsys    = 'bti';
+          headshapemri.coordsys = 'bti';
+            
+          mrifid.pnt   = ft_warp_apply(mri.transform, [fiducials.nas;fiducials.lpa;fiducials.rpa]);
+          mrifid.label = {'NZinteractive';'Linteractive';'Rinteractive'};
+          headshapemri.fid = mrifid;
+          
+          % write the headshapes
+          hcp_write_matlab([outputprefix,'_headshape'],     'headshape');
+          hcp_write_matlab([outputprefix,'_headshapemri'],  'headshapemri');
+          
+          % quality check for the coregistration between headshape and mri
+          headshape    = hcp_ensure_units(headshape,    'mm');
+          headshapemri = hcp_ensure_units(headshapemri, 'mm');
+          
+          figure;
+          subplot('position',[0.01 0.51 0.48 0.48]);hold on;
+          ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.7 0.7 0.7],'fidcolor','y','facealpha',0.3);
+          ft_plot_mesh(headshapemri,'edgecolor','none','vertexcolor',headshapemri.distance); view(180,-90);
+          plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+          subplot('position',[0.51 0.51 0.48 0.48]);hold on;
+          ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.7 0.7 0.7],'fidcolor','y','facealpha',0.3);
+          ft_plot_mesh(headshapemri,'edgecolor','none','vertexcolor',headshapemri.distance); view(0,90);
+          plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+          subplot('position',[0.01 0.01 0.48 0.48]);hold on;
+          ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.7 0.7 0.7],'fidcolor','y','facealpha',0.3);
+          ft_plot_mesh(headshapemri,'edgecolor','none','vertexcolor',headshapemri.distance); view(90,0);
+          plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+          subplot('position',[0.51 0.01 0.48 0.48]);hold on;
+          ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.7 0.7 0.7],'fidcolor','y','facealpha',0.3);
+          ft_plot_mesh(headshapemri,'edgecolor','none','vertexcolor',headshapemri.distance);  view(0,0); colorbar('east');
+          plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+          axis on;
+          grid on;
+          set(gcf,'color','w')
+          hcp_write_figure([outputprefix,'_headshape_distance.png'], gcf, 'resolution', 300); close all;
+          
+          v = headshapemri.pnt;
+          f = headshapemri.tri;
+          [f,v]=reducepatch(f,v, 0.2);
+          headshapemri.pnt = v;
+          headshapemri.tri = f;
+          
+          figure;
+          subplot('position',[0.01 0.51 0.48 0.48]);hold on;
+          ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.5 0.6 0.8],'fidcolor','y','facealpha',0.3);
+          ft_plot_headshape(headshape,'vertexsize',3); view(180,-90);
+          plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+          subplot('position',[0.51 0.51 0.48 0.48]);hold on;
+          ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.5 0.6 0.8],'fidcolor','y','facealpha',0.3);
+          ft_plot_headshape(headshape,'vertexsize',3); view(0,90);
+          plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+          subplot('position',[0.01 0.01 0.48 0.48]);hold on;
+          ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.5 0.6 0.8],'fidcolor','y','facealpha',0.3);
+          ft_plot_headshape(headshape,'vertexsize',3); view(90,0);
+          plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+          subplot('position',[0.51 0.01 0.48 0.48]);hold on;
+          ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.5 0.6 0.8],'fidcolor','y','facealpha',0.3);
+          ft_plot_headshape(headshape,'vertexsize',3); view(0,0);
+          plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
+          axis on;
+          grid on;
+          set(gcf,'color','w')
+          hcp_write_figure([outputprefix,'_headshape.png'], gcf, 'resolution', 300); close all;
+          
+          % create figures at the landmarks' locations, for QC
+          crosshair=@(pos)plot([-100 100],pos(2),'y',pos(1)*[1 1],[-100 100],'y');
+          cfg = [];
+          cfg.locationcoordinates = 'voxel';
+          cfg.location    = landmarks.ac;
+          cfg.interactive = 'no';
+          figure;ft_sourceplot(cfg, mri);
+          hcp_write_figure([outputprefix,'_landmarks_ac.png'], gcf, 'resolution', 500); close;
+          cfg.location = landmarks.pc;
+          figure;ft_sourceplot(cfg, mri);
+          hcp_write_figure([outputprefix,'_landmarks_pc.png'], gcf, 'resolution', 500); close;
+          cfg.location = landmarks.xzpoint;
+          figure;ft_sourceplot(cfg, mri);
+          hcp_write_figure([outputprefix,'_landmarks_xzpoint.png'], gcf, 'resolution', 500); close;
+          cfg.location = landmarks.rpoint;
+          figure;ft_sourceplot(cfg, mri);
+          hcp_write_figure([outputprefix,'_landmarks_rpoint.png'], gcf, 'resolution', 500); close;
+          
+          % create figures at the fiducials' location, for QC
+          cfg = [];
+          cfg.locationcoordinates = 'voxel';
+          cfg.location    = fiducials.lpa;
+          cfg.interactive = 'no';
+          figure;ft_sourceplot(cfg, mri);
+          hcp_write_figure([outputprefix,'_fiducials_lpa.png'], gcf, 'resolution', 500); close;
+          cfg.location = fiducials.rpa;
+          figure;ft_sourceplot(cfg, mri);
+          hcp_write_figure([outputprefix,'_fiducials_rpa.png'], gcf, 'resolution', 500); close;
+          cfg.location = fiducials.nas;
+          figure;ft_sourceplot(cfg, mri);
+          hcp_write_figure([outputprefix,'_fiducials_nas.png'], gcf, 'resolution', 500); close;
+          cfg.location = fiducials.zpoint;
+          figure;ft_sourceplot(cfg, mri);
+          hcp_write_figure([outputprefix,'_fiducials_zpoint.png'], gcf, 'resolution', 500); close;
+          
+          transform.vox2bti = mri.transform;
+          transform.bti2vox = inv(transform.vox2bti);
+        end
         
-        fprintf('\n');
-        fprintf('-------------------------------------------------------------------------\n');
-        fprintf('\n');
-        fprintf('Coregistering the anatomy to the axes of the MEG coordinate system\n');
-        fprintf('\n');
-        
-        % do an initial coregistration to BTI space
-        cfg          = [];
-        cfg.fiducial = fiducials;
-        mri          = ft_volumerealign(cfg, mriorig);
-        
-        transform.vox2bti_interactive = mri.transform;
-        
-        % refine the coregistration by doing a icp-based coregistration using
-        % the hs_file and the scalp surface reconstructed from the 1mm anatomy
-        fprintf('\n');
-        fprintf('Refining the coregistration using the headshape file\n');
-        fprintf('\n');
-        
-        cfg           = [];
-        cfg.method    = 'headshape';
-        cfg.headshape = ft_read_headshape(hsfile);
-        % weight the points below the xy-plane and on the forehead more
-        cfg.weights   = ones(size(cfg.headshape.pnt,1),1);
-        cfg.weights(cfg.headshape.pnt(:,3)<0)    = 1.5;
-        cfg.weights(cfg.headshape.pnt(:,3)>0.08 & cfg.headshape.pnt(:,3)<0.1) = 1.5;
-        cfg.weights(cfg.headshape.pnt(:,1)>0.05)  = 2;
-        cfg.weights(cfg.headshape.pnt(:,1)<-0.05) = 2;
-        cfg.scalpsmooth = 'no';
-        cfg.scalpthreshold = 0.08;
-        mri           = ft_volumerealign(cfg, mri);
-        
-        headshape     = struct(mri.cfg.headshape); % convert back from config object
-        headshape.coordsys = 'bti';
-        headshapemri  = struct(mri.cfg.headshapemri);
-        headshapemri.coordsys = 'bti';
-        
-        mrifid.pnt   = ft_warp_apply(mri.transform, [fiducials.nas;fiducials.lpa;fiducials.rpa]);
-        mrifid.label = {'NZinteractive';'Linteractive';'Rinteractive'};
-        headshapemri.fid = mrifid;
-        
-        % write the headshapes
-        hcp_write_matlab([outputprefix,'_headshape'],     'headshape');
-        hcp_write_matlab([outputprefix,'_headshapemri'],  'headshapemri');
-        
-        % set the transformation matrix
-        transform.vox2bti_registered = mri.transform;
-        transform.vox2bti = mri.transform;
-        
-        % create some additional transformation matrices
-        transform.bti2vox = inv(transform.vox2bti);
-        transform.spm2vox = inv(transform.vox2spm);
-        
+        % add additional transformations
         transform.spm2bti = transform.vox2bti/transform.vox2spm;
         transform.bti2spm = transform.vox2spm/transform.vox2bti;
+        [p,f,e] = fileparts(nifti_anatomical);
+        transform.vox_filename = [f,e];
+        
+        if exist('hrmrifile', 'var') && exist(hrmrifile, 'file')
+          targetmri = ft_read_mri(hrmrifile);
+          targetmri.coordsys = 'spm';  
+                        
+          % create some additional transformation matrices
+          transform.vox07mm2spm = targetmri.transform;
+          transform.vox07mm2bti = transform.spm2bti*transform.vox07mm2spm;
+          
+          transform.bti2vox07mm = inv(transform.vox07mm2bti);
+          transform.spm2vox07mm = inv(transform.vox07mm2spm);
+          
+          [p,f,e] = fileparts(hrmrifile);
+          transform.vox07mm_filename = [f,e];
+        end
+        
+        try, transform = rmfield(transform, 'vox2spm_interactive'); end
+        try, transform = rmfield(transform, 'vox2bti_interactive'); end
+        try, transform = rmfield(transform, 'vox2spm_registered'); end
         
         % write the transform structure
         hcp_write_ascii(textfile_transform, 'transform', transform, '%% FIXME put some comment here');
-        
-        % quality check for the coregistration between headshape and mri
-        headshape    = hcp_ensure_units(headshape,    'mm');
-        headshapemri = hcp_ensure_units(headshapemri, 'mm');
-        
-        figure;
-        subplot('position',[0.01 0.51 0.48 0.48]);hold on;
-        ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.7 0.7 0.7],'fidcolor','y','facealpha',0.3);
-        ft_plot_mesh(headshapemri,'edgecolor','none','vertexcolor',headshapemri.distance); view(180,-90);
-        plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
-        subplot('position',[0.51 0.51 0.48 0.48]);hold on;
-        ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.7 0.7 0.7],'fidcolor','y','facealpha',0.3);
-        ft_plot_mesh(headshapemri,'edgecolor','none','vertexcolor',headshapemri.distance); view(0,90);
-        plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
-        subplot('position',[0.01 0.01 0.48 0.48]);hold on;
-        ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.7 0.7 0.7],'fidcolor','y','facealpha',0.3);
-        ft_plot_mesh(headshapemri,'edgecolor','none','vertexcolor',headshapemri.distance); view(90,0);
-        plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
-        subplot('position',[0.51 0.01 0.48 0.48]);hold on;
-        ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.7 0.7 0.7],'fidcolor','y','facealpha',0.3);
-        ft_plot_mesh(headshapemri,'edgecolor','none','vertexcolor',headshapemri.distance);  view(0,0); colorbar('east');
-        plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
-        axis on;
-        grid on;
-        set(gcf,'color','w')
-        hcp_write_figure([outputprefix,'_headshape_distance.png'], gcf, 'resolution', 500); close all;
-        
-        v = headshapemri.pnt;
-        f = headshapemri.tri;
-        [f,v]=reducepatch(f,v, 0.2);
-        headshapemri.pnt = v;
-        headshapemri.tri = f;
-        
-        figure;
-        subplot('position',[0.01 0.51 0.48 0.48]);hold on;
-        ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.5 0.6 0.8],'fidcolor','y','facealpha',0.3);
-        ft_plot_headshape(headshape,'vertexsize',3); view(180,-90);
-        plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
-        subplot('position',[0.51 0.51 0.48 0.48]);hold on;
-        ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.5 0.6 0.8],'fidcolor','y','facealpha',0.3);
-        ft_plot_headshape(headshape,'vertexsize',3); view(0,90);
-        plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
-        subplot('position',[0.01 0.01 0.48 0.48]);hold on;
-        ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.5 0.6 0.8],'fidcolor','y','facealpha',0.3);
-        ft_plot_headshape(headshape,'vertexsize',3); view(90,0);
-        plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
-        subplot('position',[0.51 0.01 0.48 0.48]);hold on;
-        ft_plot_mesh(headshapemri,'edgecolor','none','facecolor',[0.5 0.6 0.8],'fidcolor','y','facealpha',0.3);
-        ft_plot_headshape(headshape,'vertexsize',3); view(0,0);
-        plot3([-130 130],[0 0],[0 0],'k');plot3([0 0],[-120 120],[0 0],'k');plot3([0 0],[0 0],[-100 150],'k');
-        axis on;
-        grid on;
-        set(gcf,'color','w')
-        hcp_write_figure([outputprefix,'_headshape.png'], gcf, 'resolution', 500); close all;
-        
-        % create figures at the landmarks' locations, for QC
-        crosshair=@(pos)plot([-100 100],pos(2),'y',pos(1)*[1 1],[-100 100],'y');
-        cfg = [];
-        cfg.locationcoordinates = 'voxel';
-        cfg.location    = landmarks.ac;
-        cfg.interactive = 'no';
-        figure;ft_sourceplot(cfg, mri);
-        hcp_write_figure([outputprefix,'_landmarks_ac.png'], gcf, 'resolution', 500); close;
-        cfg.location = landmarks.pc;
-        figure;ft_sourceplot(cfg, mri);
-        hcp_write_figure([outputprefix,'_landmarks_pc.png'], gcf, 'resolution', 500); close;
-        cfg.location = landmarks.xzpoint;
-        figure;ft_sourceplot(cfg, mri);
-        hcp_write_figure([outputprefix,'_landmarks_xzpoint.png'], gcf, 'resolution', 500); close;
-        cfg.location = landmarks.rpoint;
-        figure;ft_sourceplot(cfg, mri);
-        hcp_write_figure([outputprefix,'_landmarks_rpoint.png'], gcf, 'resolution', 500); close;
-        
-        % create figures at the fiducials' location, for QC
-        cfg = [];
-        cfg.locationcoordinates = 'voxel';
-        cfg.location    = fiducials.lpa;
-        cfg.interactive = 'no';
-        figure;ft_sourceplot(cfg, mri);
-        hcp_write_figure([outputprefix,'_fiducials_lpa.png'], gcf, 'resolution', 500); close;
-        cfg.location = fiducials.rpa;
-        figure;ft_sourceplot(cfg, mri);
-        hcp_write_figure([outputprefix,'_fiducials_rpa.png'], gcf, 'resolution', 500); close;
-        cfg.location = fiducials.nas;
-        figure;ft_sourceplot(cfg, mri);
-        hcp_write_figure([outputprefix,'_fiducials_nas.png'], gcf, 'resolution', 500); close;
-        cfg.location = fiducials.zpoint;
-        figure;ft_sourceplot(cfg, mri);
-        hcp_write_figure([outputprefix,'_fiducials_zpoint.png'], gcf, 'resolution', 500); close;
         
         fprintf('\n');
         fprintf('-------------------------------------------------------------------------\n');
@@ -444,8 +498,14 @@ if dopipeautomatic,
         error('when the automatic part of the anatomy pipeline is run without coregistration, a textfile with coregistration information needs to exist');
     end
     
-    mri4D     = mri; mri4D.transform  = transform.vox2bti; mri4D.coordsys  = 'bti';
-    mriRAS    = mri; mriRAS.transform = transform.vox2spm; mriRAS.coordsys = 'spm';
+    if isfield(transform, 'vox2bti'),
+      % old style transform structure
+      mri4D     = mri; mri4D.transform  = transform.vox2bti; mri4D.coordsys  = 'bti';
+      mriRAS    = mri; mriRAS.transform = transform.vox2spm; mriRAS.coordsys = 'spm';
+    else 
+      mri4D     = mri; mri4D.transform  = transform.vox2bti; mri4D.coordsys  = 'bti';
+      mriRAS    = mri; mriRAS.transform = transform.vox2spm; mriRAS.coordsys = 'spm';
+    end
     
     %---------------------------------------------
     % execute the non-interactive part of the pipeline
@@ -776,137 +836,54 @@ if dopipeautomatic,
             outputsurffile = surffile;
         end
         
-        fprintf('\n');
-        fprintf('-------------------------------------------------------------------------\n');
-        fprintf('Adding parcellation information to the cortical sheet source model\n');
-        fprintf('\n');
-        
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % get the three Freesurfer parcellations and add these to the sourcemodel
-        if ft_filetype(outputsurffile, 'caret_surf')
-            [p,f,e]     = fileparts(outputsurffile);
-            tmpfilename = [f,e];
-            tmpfilename = strrep(tmpfilename, rootstr, 'aparc');
-            tmpfilename = strrep(tmpfilename, '.surf.', '.label.');
-            tmpfile1   = fullfile(surflabeldir, tmpfilename);
-            tmpfile1b  = outputsurffile;
-            tmpfilename = strrep(tmpfilename, rootstr, 'aparc');
-            tmpfilename = strrep(tmpfilename, '.surf.', '.label.');
-            tmpfilename = strrep(tmpfilename, '.L.', '.R.');
-            tmpfile2   = fullfile(surflabeldir, tmpfilename);
-            tmpfile2b  = strrep(outputsurffile, '.L.', '.R.');
-        else
-            % this assumes the freesurfer directory to be visible
-            tmpfile1   = fullfile(surflabeldir,'lh.aparc.annot');
-            tmpfile1b  = outputsurffile;
-            tmpfile2   = fullfile(surflabeldir,'rh.aparc.annot');
-            tmpfile2b  = strrep(outputsurffile, 'lh.', 'rh.');
-        end
-        atlasleft  = ft_read_atlas({tmpfile1 tmpfile1b}, 'format', 'freesurfer_aparc');
-        atlasright = ft_read_atlas({tmpfile2 tmpfile2b}, 'format', 'freesurfer_aparc');
-        
-        % combine left and right atlases
-        nlabel = numel(atlasleft.aparclabel);
-        for k = 1:nlabel
-            aparclabel{k}        = ['L_',atlasleft.aparclabel{k}];
-            aparclabel{k+nlabel} = ['R_',atlasright.aparclabel{k}];
-        end
-        
-        % update the indexing
-        tmp        = atlasright.aparc;
-        tmp(tmp>0) = tmp(tmp>0)+nlabel;
-        aparc      = cat(1, atlasleft.aparc, tmp);
-        
-        if isfield(sourcemodel2d, 'orig')
-            sourcemodel2d.aparc      = aparc(sourcemodel2d.orig.inuse>0);
-        else
-            sourcemodel2d.aparc      = aparc;
-        end
-        sourcemodel2d.aparclabel = aparclabel;
-        
-        if ft_filetype(outputsurffile, 'caret_surf')
-            [p,f,e]     = fileparts(outputsurffile);
-            tmpfilename = [f,e];
-            tmpfilename = strrep(tmpfilename, rootstr, 'aparc.a2009s');
-            tmpfilename = strrep(tmpfilename, '.surf.', '.label.');
-            tmpfile1   = fullfile(surflabeldir, tmpfilename);
-            tmpfile1b  = outputsurffile;
-            tmpfilename = strrep(tmpfilename, rootstr, 'aparc.a2009s');
-            tmpfilename = strrep(tmpfilename, '.surf.', '.label.');
-            tmpfilename = strrep(tmpfilename, '.L.', '.R.');
-            tmpfile2   = fullfile(surflabeldir, tmpfilename);
-            tmpfile2b  = strrep(outputsurffile, '.L.', '.R.');
-        else
-            tmpfile1   = fullfile(surflabeldir,'lh.aparc.a2009s.annot');
-            tmpfile1b  = outputsurffile;
-            tmpfile2   = fullfile(surflabeldir,'rh.aparc.a2009s.annot');
-            tmpfile2b  = strrep(outputsurffile, 'lh.', 'rh.');
-        end
-        atlasleft  = ft_read_atlas({tmpfile1 tmpfile1b}, 'format', 'freesurfer_a2009s');
-        atlasright = ft_read_atlas({tmpfile2 tmpfile2b}, 'format', 'freesurfer_a2009s');
-        
-        % combine left and right atlases
-        nlabel = numel(atlasleft.a2009slabel);
-        for k = 1:nlabel
-            a2009slabel{k}        = ['L_',atlasleft.a2009slabel{k}];
-            a2009slabel{k+nlabel} = ['R_',atlasright.a2009slabel{k}];
-        end
-        
-        % update the indexing
-        tmp        = atlasright.a2009s;
-        tmp(tmp>0) = tmp(tmp>0)+nlabel;
-        a2009s     = cat(1, atlasleft.a2009s, tmp);
-        
-        if isfield(sourcemodel2d, 'orig')
-            sourcemodel2d.a2009s      = a2009s(sourcemodel2d.orig.inuse>0);
-        else
-            sourcemodel2d.a2009s      = a2009s;
-        end
-        sourcemodel2d.a2009slabel = a2009slabel;
-        
-        if ft_filetype(outputsurffile, 'caret_surf')
-            [p,f,e]     = fileparts(outputsurffile);
-            tmpfilename = [f,e];
-            tmpfilename = strrep(tmpfilename, rootstr, 'BA');
-            tmpfilename = strrep(tmpfilename, '.surf.', '.label.');
-            tmpfile1   = fullfile(surflabeldir, tmpfilename);
-            tmpfile1b  = outputsurffile;
-            tmpfilename = strrep(tmpfilename, rootstr, 'BA');
-            tmpfilename = strrep(tmpfilename, '.surf.', '.label.');
-            tmpfilename = strrep(tmpfilename, '.L.', '.R.');
-            tmpfile2   = fullfile(surflabeldir, tmpfilename);
-            tmpfile2b  = strrep(outputsurffile, '.L.', '.R.');
-        else
-            tmpfile1   = fullfile(surflabeldir,'lh.BA.annot');
-            tmpfile1b  = outputsurffile;
-            tmpfile2   = fullfile(surflabeldir,'rh.BA.annot');
-            tmpfile2b  = strrep(outputsurffile, 'lh.', 'rh.');
-        end
-        atlasleft  = ft_read_atlas({tmpfile1 tmpfile1b}, 'format', 'freesurfer_ba');
-        atlasright = ft_read_atlas({tmpfile2 tmpfile2b}, 'format', 'freesurfer_ba');
-        
-        % combine left and right atlases
-        nlabel = numel(atlasleft.BAlabel);
-        for k = 1:nlabel
-            BAlabel{k}        = ['L_',atlasleft.BAlabel{k}];
-            BAlabel{k+nlabel} = ['R_',atlasright.BAlabel{k}];
-        end
-        
-        % update the indexing
-        tmp        = atlasright.BA;
-        tmp(tmp>0) = tmp(tmp>0)+nlabel;
-        BA      = cat(1, atlasleft.BA, tmp);
-        
-        if isfield(sourcemodel2d, 'orig')
-            sourcemodel2d.BA      = BA(sourcemodel2d.orig.inuse>0);
-        else
-            sourcemodel2d.BA      = BA;
-        end
-        sourcemodel2d.BAlabel = BAlabel;
-        
-        
         % write the sourcemodel
-        hcp_write_matlab([outputprefix,'_sourcemodel2d'], 'sourcemodel2d');
+        hcp_write_matlab([outputprefix,'_sourcemodel_2d'], 'sourcemodel2d');
+        
+        % qualitycheck figures, for this we need the mri
+        if exist('hrmrifile', 'var')
+          mri           = ft_read_mri(hrmrifile);
+          mri.coordsys  = 'bti';
+          mri.transform = transform.vox07mm2bti;
+        else
+          mri           = ft_read_mri(nifti_anatomical);
+          mri.coordsys  = 'bti';
+          mri.transform = transform.vox2bti;
+        end
+        
+        % also read in the headmodel: this will provide a crash if it does
+        % not exist.
+        hcp_read_matlab([outputprefix,'_headmodel']);
+        
+        % and the sourcemodel2d should be in mm
+        sourcemodel2d = ft_convert_units(sourcemodel2d, 'mm');
+        headmodel     = ft_convert_units(headmodel,     'mm');
+        
+        figure;
+        options = {'transform',mri.transform,'intersectmesh',{sourcemodel2d headmodel.bnd}};
+        subplot(2,2,1); hold on; ft_plot_slice(mri.anatomy, 'location', [0  0 60], 'orientation', [0 0 1], options{:}); view(0,90);
+        subplot(2,2,2); hold on; ft_plot_slice(mri.anatomy, 'location', [0  0 20], 'orientation', [0 0 1], options{:}); view(0,90);
+        subplot(2,2,3); hold on; ft_plot_slice(mri.anatomy, 'location', [0 20  0], 'orientation', [1 0 0], options{:}); view(90,0);
+        subplot(2,2,4); hold on; ft_plot_slice(mri.anatomy, 'location', [0 20  0], 'orientation', [0 1 0], options{:}); view(0,0);
+        set(gcf, 'Renderer', 'zbuffer')
+        hcp_write_figure([outputprefix,'_sourcemodel_2d.png']);
+
+        options = {'transform', mri.transform,'nslice',16,'intersectmesh',{sourcemodel2d headmodel.bnd},...
+           'intersectlinewidth',1,'slicesize',[300 300]};
+
+        figure;
+        ft_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [0 0 1], 'slicerange', [-20 120], options{:});
+        set(gcf, 'Renderer', 'zbuffer');   
+        hcp_write_figure([outputprefix,'_slice1.png'], 'resolution', 300);
+
+        figure;
+        ft_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [0 1 0], 'slicerange', [-60 60], options{:});
+        set(gcf, 'Renderer', 'zbuffer');
+        hcp_write_figure([outputprefix,'_slice2.png'], 'resolution', 300);
+
+        figure;
+        ft_plot_montage(mri.anatomy, 'location', [0 0 0], 'orientation', [1 0 0], 'slicerange', [-70 110], options{:});
+        set(gcf, 'Renderer', 'zbuffer');
+        hcp_write_figure([outputprefix,'_slice3.png'], 'resolution', 300);
         
         fprintf('\n');
         fprintf('-------------------------------------------------------------------------\n');

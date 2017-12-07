@@ -1,42 +1,158 @@
 function    [trl,trlInfoColDescr, trialSummary,scanStartSamp,scanEndSamp,warninfo]  = trialfun_StoryM_BaseExtractAll( cfg )
-
-% This is the Trial Definition Function for Story/Math Task experiment.
-% The trigger is derived from ONLY Parallel Port transients on the trigger channle
-% This function aims at extracting ALL the trial definitions for a given
-% data group definition. The conditions within each data group are then
-% extracted  by the corresponding contrast function.
-%__________________________________________________________________________
-%cfg.datafile : The datafile to read the triggers from
-%cfg.trialdef.cutmode    %1. All Events - Onset of Story Sentences, Math number words, Math operand words, Option intro word,Option 1, Option OR, Option 2  (Fixed trial length)
-%                        %2. Response (Fixed trial length)
-%                        %3. Sentences (Story Sentences or Math question sentences(not including option interval)) (Variable trial length)
-%                        %4. Units (Stories or Math Problems including Option Interval) (Variable trial length)
+%% This is the Trial Definition Function for the Story/Math experiment.
+% It extracts the trial definition for ALL trials within each of different
+% datagroup.
+% There are 4 different data groups for Story/Math
 %
-% cfg.trialdef.prestimTime: Desired time interval (in seconds) before Trigger onset. Must be positive.
-%       For both of events and blocks, prestimTime will be considered.
-% cfg.trialdef.poststimTime: Desired time interval (in seconds) after Trigger onset. Must be positive.
-%       For both of events and blocks, poststimTime will be considered.
-% cfg.trialdef.plotresults = 'yes' or 'no' (default = 'no')
-%__________________________________________________________________________
-% Output:
-% trl: Ntrials-by-3 matrix with the trial definition
-% Column 1: Start sample for trials
-% Column 2: End sample for trials
-% Column 3: Offset of beginning of each trial from Trigger onset in Samples (i.e. -100).
-% Column 4 to end : Additional information about the trials
-%__________________________________________________________________________
-%% === Example:
-% cfg = [];
-% cfg.datafile = 'xxx\c,rfDC';% xxx is directory of the raw MEG scan
-% cfg.trialfun = 'trialfun_StoryM_BaseExtractAll';
-% cfg.trialdef.cutmode = 1 % Beginning of Narration Unit (Sentence or Math Problem) (Fixed trial length)
-% cfg.trialdef.prestimTime = 1.5;
-% cfg.trialdef.poststimTime =4;
-% %cfg.trialdef.plotresults = 'no';%(default = 'no')
-% cfgDefTr = ft_definetrial(cfg);
-% cfgDefTr.dataformat = '4d';
-% cfgDefTr.headerformat = '4d';
-% dataRaw = ft_preprocessing(cfgDefTr);
+% DATA GROUPS
+%----------------------------------
+% 1. mnemonic: TEV.    description:  Onset of any task event during the question
+%                                      and option period in stories and math problems.
+%                                      All trials have the same fixed duration.
+% 2. mnemonic: TRESP.  description:  Onset of button press by the subject. All trials 
+%                                      have the same fixed duration.
+% 3. mnemonic: BSENT.  description:  Trials contain entire sentences. For stories this
+%                                      is a sentence during narration without the option 
+%                                      sentence at the end of the story. For Maths this 
+%                                      is the sentence of the Math problem excluding the 
+%                                      option sentence at the end. Trials
+%                                      have variable duration.
+% 4. mnemonic: BUN.    description:  Trials containing entire Blocks of stimulus Units. 
+%                                      As stimulus unit is defined an entire story or 
+%                                      an entire math problem including the option part.
+%                                      Trials have variable duration.
+%
+% 
+% INPUT VARIABLE
+%----------------------------------
+% cfg : This is a structure containing information required for extracting
+%       the trials for each of the 4 data groups described above.
+%       Fields:
+%               .datafile: This is the filename of the raw data file.
+%               .trialdef: This is a structure containing the parameters
+%                          required to split the data into the trials of each of the data
+%                          groups.
+%                          Fields:
+%                          .trialdef.cutmode = 1 or 2 or 3 or 4;       % Defines the data group cut mode. 1 for TEV, 
+%                                                                          2 for TRESP, 3 for BSENT, 4 for BUN.
+%                          .trialdef.preStimTime = 1.5;                % Time interval prior to 0 reference point for each trial 
+%                          .trialdef.postStimTime = 1.5;               % For fixed length trial data groups TEV and TRESP this is
+%                                                                          the time interval after the 0 reference point for each 
+%                                                                          trial. For variable length trial data groups BSENT and BU,
+%                                                                          this is the time interval after the END of the given event 
+%                                                                          to be added to the trial.
+%
+%
+%
+%
+% OUTPUT VARIABLES
+%-----------------------------------
+% trl: This is a numerical matrix.  Each column corresponds to a trial and
+%      each column to a specific condition of piece of information, quantified numerically , regarding
+%      each trial. The first 3 Columns describe the trial start sample, end sample and time offset 
+%      of the start of the trial relative to the 0 reference point. These 3
+%      columns are used by fieldtrip as the necessary information required
+%      to extract the data for each trial.
+%      The rest of the columns encode various types of information about
+%      each trial. This part of the trl Matrix , from column 4 to the last
+%      column, should be refered to as 'trialinfo' part of the trl matrix.
+%
+% trlInfoColDescr: This is a cell array. Each element is a string
+%                  describing the type of information encoded by the corresponding column of
+%                  the 'trialinfo' part of trl matrix described above. 
+%
+% trialSummary:    This is a structure containing an overview of the breakdown of the data
+%                  in trials of the main conditions for ALL data groups.
+%                  This is used for Quality Control purposes in order to
+%                  ensure that the correct number of trials for each of
+%                  the main conditions is present in the data and identifying any
+%                  discrepances due to problems in the stimulus presentation protocol.
+%
+% scanStartSamp:   This is the sample number of the onset of the first
+%                  stimulus block.
+% scanEndSamp:     This is the sample number of the offset of the last
+%                  stimulus block.
+% warninfo:        This is cell variable used for Quality Control , in
+%                  order to catch problems with unexpected trigger values.
+%
+%
+% Below is presented, for convenience of the reader, the description of
+% each column of the 'trialinfo' part of trl matrix described above and 
+% contained in the trlInfoColDescr output variable. 
+%
+%
+%
+%
+% Trialinfo Column Description as presented in trlInfoColDescr output variable
+%-------------------------------------------------------------------------------
+%========================================================================
+% data group: TEV
+%-----------------
+%  '1. Block Number within Run'
+%  '2. Unit Type : 1.Story 2.Math'
+%  '3. Unit Number within Run'
+%  '4. Total Number of units (N of Stories or N of Math problems ) in same Run'
+%  '5. Unit Number within Block'
+%  '6. Total Number of units (N of Stories or N of Math problems ) in same Block'
+%  '7. Attribute1: For story this is the story number. For Math is the difficulty level'
+%  '8. Unit Narration interval Start Sample - Start with the onset of the  first word trigger or the beginning of the first sentence'
+%  '9. Unit Narration interval End Sample'
+%  '10. N subunits within Narration interval'
+%  '11. Unit Option interval Start Sample'
+%  '12. Unit Option interval End Sample'
+%  '13. N subunits within Option interval'
+%  '14 Correct Option- 1 or 2'
+%  '15 Unit Response interval start sample'
+%  '16 Unit Response interval end sample'
+%  '17 Unit Response sample'
+%  '18 is Response Correct'
+%  '19 is Response Early'
+%  '20 Event Sample'
+%  '21 Event Type - 20.Math Narration number word,\n 21.Math Narration operand word,\n 22.Math Option Intro Word,\n 23.Math Option 1 Word\n  24. Math Option OR Word\n 25.Math Option 2 Word\n 10.Story Sentence,\n 12.Story Option Intro\n 13.Math Option 1 Word\n  14. Math Option OR Word\n 15.Math Option 2 Word'
+%  '22. Narration Event Number in Narration interval  (Applies only to Sentence or number or operation in Narration interval)'};
+%========================================================================
+% data group: TRESP or BUN
+%-----------------
+%  '1. Block Number within Run'
+%  '2. Unit Type : 1.Story 2.Math'
+%  '3. Unit Number within Run'
+%  '4. Total Number of units (N of Stories or N of Math problems ) in same Run'
+%  '5. Unit Number within Block'
+%  '6. Total Number of units (N of Stories or N of Math problems ) in same Block'
+%  '7. Attribute1: For story this is the story number. For Math is the difficulty level'
+%  '8. Unit Narration interval Start Sample - Start with the onset of the first word trigger or the beginning of the first sentence'
+%  '9.  Unit Narration interval End Sample'
+%  '10. N subunits within Narration interval'
+%  '11. Unit Option interval Start Sample'
+%  '12. Unit Option interval End Sample'
+%  '13. N subunits within Option interval'
+%  '14. Option Intro Sample - "equals" or "That was about"'
+%  '15. Option1 onset sample'
+%  '16. OR onset sample'
+%  '17. Option2 onset sample'
+%  '18. Correct Option- 1 or 2'
+%  '19. Unit Response interval start sample'
+%  '20. Unit Response interval end sample'
+%  '21. Unit Response sample'
+%  '22. is Response Correct'
+%  '23. is Response Early'};
+%========================================================================
+% data group: BSENT
+%-----------------
+%  '1. Block Number within Run'
+%  '2. Unit Type : 1.Story 2.Math'
+%  '3. Unit Number within Run'
+%  '4. Total Number of units (N of Stories or N of Math problems ) in same Run'
+%  '5. Unit Number within Block'
+%  '6. Total Number of units (N of Stories or N of Math problems ) in same Block'
+%  '7. Attribute1: For story this is the story number. For Math is the  difficulty level'
+%  '8. N sentences within Narration interval (always one for math as in math one narration interval corresponds to one math sentence)'
+%  '9. is Response Correct (For Story this refers to the response at the very end of the sentence)'
+%  '10. is Response Early'
+%  '11. Narration Sentence Number in Narration interval  (For math always equal to one)'
+%  '12. Narration Sentence Start Sample'
+%  '13. Narration Sentence End Sample'};
+%========================================================================
 
 % Copyright (C) 2011-2013 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
 %
@@ -67,7 +183,7 @@ poststimTime = cfg.trialdef.poststimTime;
 if strcmpi(cfg.trialdef.plotresults , 'yes' ), plot_flag = 1; else plot_flag = 0; end
 
 %%
-hdr = read_header(datafile);
+hdr = ft_read_header(datafile);
 Fsample = hdr.Fs;
 prestimSamples = floor(prestimTime*Fsample);
 poststimSamples = floor(poststimTime*Fsample);

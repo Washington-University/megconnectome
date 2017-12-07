@@ -1,9 +1,45 @@
 function [outStatus] = hcp_eravg_contrasts(inCfg)
-
-% This function loads time frequency data and computes its trial average  as well
-% as the average of its planar gradient
-% outdatafile is the file where the averaged data will be saved
-% outinfofile is the ZIP file where any plotted figures will be saved
+%% This function computes the average of ERFs for different conditions and contrasts for a given experiment.
+% It loads clean data and computes its trial average  as well
+% as the average of its planar gradient. 
+% It performes this average over the trials of BOTH scans for a given
+% experiment.
+%
+%
+% INPUT:
+%-------------------------------------------------------------------
+% inCfg : This is a structure containing required parameters for the
+%          analysis
+%          Fields: 
+%                .subjectid: Subject ID
+%                .experimentid: Experiment ID
+%                .multiscanid:  This an ID the describes both scans for a
+%                                given Task. i.e. for scans 10-Motort and
+%                                11-Motort, the average of the concatanated
+%                                datasets is represented by the multiscanid
+%                                'Motort'.
+%                .contrastlist: This is a cell containing all different
+%                                conditions and constrasts for a specific task data set for
+%                                which the eravg is to be computed. It is produced by hte
+%                                contrasts_$MULTISCANID.m functions.
+%
+% OUTPUT:
+%---------------------------------------------------------------------
+% outStatus: A dummy output flag 
+%
+%
+%
+%
+% NAMING OF FILES WERE RESULTS ARE SAVED
+%------------------------------------------------------------------------------
+%  The average ERF is saved in a typical fieltrip timelock data structure names 'data'.
+%  This structure is saved in a file named according to the convention
+%  [experimentid,'_',scanmnem,'_',contrast_mnemonic,'_[MODE-',avgmode,']'];
+%  contrast_mnemonic is a string ID contained within each contrast in the
+%  input inCfg.contrastlist variable. avgmode is 'meg' for magnetic field
+%  representation or 'planar' for planar gradient representation.
+%-----------------------------------------------------------------------------    
+    
 
 % Copyright (C) 2011-2014 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
 %

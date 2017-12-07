@@ -30,7 +30,10 @@ function compile_megconnectome(fieldtriproot, hcproot)
 % along with megconnectome.  If not, see <http://www.gnu.org/licenses/>.
 
 % clear all variables, globals, functions and MEX links
-clear all
+% clear all; % don't do this because it clears the input arguments
+clear global;
+clear fun;
+clear mex;
 
 fname = 'megconnectome';
 

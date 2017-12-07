@@ -1,5 +1,19 @@
 function hcp_ICA_plotclassification(comp,options_ICA,datain)
 
+% HCP_ICA_PLOTCLASSIFICATION allows the plots of Independent
+% Components automatically classified by HCP_ICA_RMEG_CLASSIFICATION function. This
+% function is able to classify Independent Components into Brain Activity
+% and ECG/EOG related artifacts provided that ECG and EOR reference
+% channels are used.
+%
+% Use as
+%   hcp_ICA_plotclassification(comp,options_ICA,datain)
+%
+%     where the input comp structure should be obtained from
+%     HCP_ICA_RMEG_CLASSIFICATION and the datain structure is a fieldtrip data
+%     structure contining the channel time courses used as imput of the
+%     FT_COMPONENTANALYSIS .
+%
 % Copyright (C) 2011-2014 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
 %
 % This file is part of megconnectome.
@@ -21,7 +35,7 @@ subject   = ft_getopt(options_ICA, 'subject');
 bandpass  = ft_getopt(options_ICA, 'bandpass');
 bandstop  = ft_getopt(options_ICA, 'bandstop');
 grad      = ft_getopt(options_ICA, 'grad');
-modality      = ft_getopt(options_ICA, 'modality', 'MEG'); % GIORGOS
+modality      = ft_getopt(options_ICA, 'modality', 'MEG'); 
 
 if strcmp(modality,'MEG')
     layout='4D248.mat';
@@ -37,7 +51,7 @@ comp.time={cell2mat(datain.time)};
 
 
 if(~isfield(comp,'pow_data'))
-    doplot='no'; % Summury Results cn be plotted also at this level without calling hcp_plotICA
+    doplot='no'; 
     options = {'doplot',doplot, 'grad', grad,'plottype','components'};
     
     [comp_freq]=hcp_ICA_freq(comp, options, datain);
@@ -46,7 +60,7 @@ if(~isfield(comp,'pow_data'))
 end
 n_IC=size(comp.unmixing,1);
 
-frange=bandpass; %to be decided if in compo or other
+frange=bandpass;
 
 cfgin =[];
 cfgin.grad=grad;
@@ -68,7 +82,7 @@ time_pIC=cell2mat(pow_data.time);
 leg={'OneOverF (>0.5)  ' ; 'Specflat (<2.0)  ' ; 'Kurtosis (>15)   ' ; 'elecSig (>0.1)   '; 'elecPow (>0.25)  '; 'elecSpe (>0.95)  '};
 thrs=[0.5;2.0;15;0.1;0.25;0.95];
 class=comp.class;
-% size_s=get(0,'ScreenSize');
+
 for ix=1:n_IC
     str(1,:)={num2str(abs(comp.class.spectrum_one_over_f(1,ix)),'%5.3f')};
     str(2,:)={num2str(abs(comp.class.spectrum_flat(1,ix)),'%5.1f')};
@@ -86,28 +100,16 @@ for ix=1:n_IC
     str_ic = 'ARTIFACT';
 
     if(find(class.brain_ic==ix)), str_ic='BRAIN'; end
-%%%   In the cluster version all this settings are not required    
-%     X = 29.7;                  %# A3 paper size
-%     Y = 14.35;                  %# A3 paper size
-%     xMargin = 1;               %# left/right margins from page borders
-%     yMargin = 1;               %# bottom/top margins from page borders
-%     xSize = X - 2*xMargin;     %# figure size on paper (widht & hieght)
-%     ySize = Y - 2*yMargin;     %# figure size on paper (widht & hieght)
+
     figure('Menubar','none');
 %     
     set(gca, 'XTickLabel',[], 'YTickLabel',[], ...
         'Units','normalized', 'Position',[0 0 1 1])
-%     
-%     %# figure size on screen (50% scaled, but same aspect ratio)
-%     set(gcf, 'Units','centimeters', 'Position',[5 5 xSize ySize])
 
 %# figure size printed on paper
     set(gcf, 'visible', 'off')
     set(gcf, 'PaperUnits','inches')
-%     set(gcf, 'PaperSize',[X Y])
-%     set(gcf, 'PaperPosition',[xMargin yMargin xSize ySize])
-%     set(gcf, 'PaperOrientation','portrait')
-%%%
+
     set(gcf, 'paperposition', [1 1 20 12]);
 
     subplot(2,3,1)
@@ -115,7 +117,6 @@ for ix=1:n_IC
     cfgin.layout=layout;
     cfgin.colorbar='yes';
     ft_topoplotIC(cfgin, comp);
-%     xlabel(['IC ' num2str(ix)],'color','k');
     title('IC sensor map','FontSize',12);
     
     subplot(2,3,4)
@@ -130,8 +131,6 @@ for ix=1:n_IC
     
     str_icnum = {['ic ' num2str(ix) ' = ' str_ic]};
 
-%     text(1.2,0.5,leg,'Units','normalized','FontSize',16)
-%     text(2,0.5,str,'Units','normalized','FontSize',16,'color',strcolor)
     text(1.2 ,0.65,leg{1},'Units','normalized','FontSize',22,'color',strcolor(1))
     text(2,0.65, str{1},'Units','normalized','FontSize',22,'color',strcolor(1))
     text(1.2,0.59,leg{2},'Units','normalized','FontSize',22,'color',strcolor(2))
@@ -145,10 +144,7 @@ for ix=1:n_IC
     text(1.2,0.335,leg{6},'Units','normalized','FontSize',22,'color',strcolor(6))
     text(2,0.335,str{6},'Units','normalized','FontSize',22,'color',strcolor(6))
 
-%     text(1.5,0.2,str_icnum,'Units','normalized','FontSize',16)
-%     text(1.5,0.1,str_ic,'Units','normalized','FontSize',16,'color','r')
     text(1.2,0.8,str_icnum,'Units','normalized','FontSize',22,'color','b')
-%     text(1.8,0.8,str_ic,'Units','normalized','FontSize',16,'color','b')
     
     subplot(2,3,[2 3])
     timeic=cell2mat(comp.time);
@@ -173,7 +169,6 @@ for ix=1:n_IC
     disp('SAVING');
     hcp_write_figure(imgname, gcf, 'resolution', 300);
     disp('SAVED');    
-%     clear h;
     close
 end
 

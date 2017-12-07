@@ -1,4 +1,50 @@
 function [cleanTrl] = hcp_extract_allfromrun(inCfg)
+%% This function performs the core processing of the tmegpreproc and rmegpreproc pipelines.
+% It extracts  trial data for a give data group and fuses them with the
+% results from hcp_baddata.m pipeline so that bad channels and trials that 
+% coincide with noisy periods are removed. In the case that a trial spans 
+% a long block of data, in order to avoid removing it entirely, the bad 
+% segments in the trials are replaced with nan. (This is the case for the Story/Math data groups BSENT and BUN). 
+% Then the IC components identified as related to heart or eye activity by hcp_icaclass.m pipeline are removed. 
+% Then the data is resampled to one fourth of the original sampling frequency in order to reduce the size of the 
+% dataset. 
+%
+%
+% INPUT:
+%-------------------------------------------------------------------
+% inCfg : This is a structure containing required parameters for the
+%          analysis
+%          Fields:
+%                .datafile:  This is the raw data filename for a given scan.
+%                .trl:       This is the trials definition matrix. It has 3 columns and number of rows equal to number of trials. The
+%                              first column is the start sample, the second is the end sample and time offset of the start of the trial 
+%                              relative to the 0 reference point. This information is created by the trial definition functions. 
+%                .badchanfile: This is the file containing information about bad channels. This information is created by
+%                                 hcp_baddata.m pipeline.
+%                .badsegmfile: This is the file containing information about bad segments. This information is created by
+%                                 hcp_baddata.m pipeline.
+%                .icainfofile: This is the file containing information about artifactual Independent Components in the data. This
+%                                 information is created hcp_icaclass.m pipeline
+%                .badsegmode:  This variable defines if trials containing bad segments will be removed in full or the bad segments will be replaced by NANs.
+%                              'remfull' for remove full trial or 'repnan'
+%                              for replacing with NANs.  This field is set in the alltrialdefparams_*.m scripts.
+%
+%                .montage:     This is the montage containing the emg channels. This
+%                                variable is constructed by the hcp_exgmontage.m function. 
+%                                In .labelnew subfield , the expected emg channels names are  expected to be 
+%                                {'EMG_LH','EMG_LF','EMG_RH','EMG_RF'}        
+%                .lineFreq:    Numerical array that contain the frequencies
+%                                of line current to be filtered out i.e. [60 120].
+%                .outputfile:   The filename of the data file where the cleaned data will be saved.
+%
+%
+% OUTPUT
+%-----------------------------------------------------------
+% cleanTrl : %   This is a numerical matrix similar to the input inCfg.trl trials definition matrix described above. 
+%                It has 3 columns and number of rows equal to number of CLEAN trials that remained after the cleaning performed. 
+%                The first column is the start sample, the second is the end sample and time offset of the start of the trial 
+%                relative to the 0 reference point. 
+%-------------------------------------------------------------
 
 % Copyright (C) 2011-2014 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
 %
@@ -39,6 +85,11 @@ cfgDefTr.dataformat = '4d';
 cfgDefTr.headerformat = '4d';
 cfgDefTr.demean = 'no';
 dataRaw = ft_preprocessing(cfgDefTr);
+
+% remove the Supine balancing coefficients, because it's likely incorrect.
+% the call to ft_datatype_sens is needed because ft_apply_montage strips
+% the chanunit and chantype for some reason
+dataRaw.grad = ft_datatype_sens(ft_apply_montage(dataRaw.grad, dataRaw.grad.balance.Supine, 'inverse', 'yes', 'keepunused', 'yes'));
 
 origFs = dataRaw.fsample;
 % =====================

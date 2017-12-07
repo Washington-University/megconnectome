@@ -60,11 +60,9 @@ plotics   = ft_getopt(options_ICA, 'plotics',       'no');      % 'yes' or 'no' 
 ch_method = ft_getopt(options_ICA, 'bad_ch_method', 'std_thr'); % 'std_thr' or 'max_weight' (default='std_thr')
 selmode   = ft_getopt(options_ICA, 'mode',          'auto');    % skipped interval selection 'auto' or 'user' (default='auto')
 saveit    = ft_getopt(options_ICA, 'iter_results');             % save the results of each iteration
-modality   = ft_getopt(options_ICA, 'modality','MEG'); %Francesco
+modality   = ft_getopt(options_ICA, 'modality','MEG'); 
 resamplefs     = ft_getopt(options_ICA, 'resamplefs');
 
-% Add some options to the options_ICA cell-array that will be passed to
-% lower level functions. Should these be configurable?
 options_ICA = ft_setopt(options_ICA, 'save_comp',   'yes');
 options_ICA = ft_setopt(options_ICA, 'ica_iterations', 1);
 
@@ -74,28 +72,24 @@ if(~isempty(resamplefs))
 end
 
 %------------------------
-% GIORGOS
 if strcmp(modality,'MEG')
     layout='4D248.mat';
     threshold_std=10;
 elseif strcmp(modality,'EEG')
     layout='EEG1010.lay';
-    threshold_std=15; % The original threshold for MEG was 10 but many channels were identified as bad. Increased the threshold to be adapted to the EEG signal characteristics
+    threshold_std=15; 
 end
 %-----------------------------
 
-% These are hard coded thresholds. Should we consider to make them
-% configurable?
 num_sig     = 12; % number of standard deviation out of the mean from the artifact detection
 sic_thr_par = 5;  % factor of multiplication of the threshold for the determination of the intervals to be skipped
 
 
-% size_s   = get(0,'ScreenSize');
 size_s = [1,1 1200 700];
 flag     = 1; % flag that checks convergence
 it       = 0;  % iteration counter
-bch2     = []; % some variable
-segcount = 0;  % some variable
+bch2     = []; 
+segcount = 0;  
 while flag
     clear datain
     disp('doing ICA preprocessing')
@@ -106,8 +100,6 @@ while flag
     comp   = iteration.comp;
     
     % normalize the time courses to unit standard deviation (and zero mean)
-    % -> this shouldn't matter because the component time courses are by
-    % definition zero mean
     disp('STARTING ft_channelnormalise');
     tmp        = ft_channelnormalise([], comp);
     disp('DONE ft_channelnormalise');
@@ -127,8 +119,6 @@ while flag
         disp('DONE ft_ICA_plot');
     end
     
-    % HACK JM work it back into the 1 trial case in order for the rest of the
-    % code to work: I suggest however to clean this up at some point
     disp('STAGE POST A');
     fs = 0;
     nsmp = 0;
@@ -138,8 +128,6 @@ while flag
     end
     fs = nsmp./fs;
     
-    %   timelim  = [comp.time{1}(1) comp.time{end}(end)];
-    %   timeaxis = timelim(1):1/fs:timelim(2);
     if(isempty(resamplefs))
         nSamples = dataraw.sampleinfo(1,2);
     else
@@ -166,9 +154,7 @@ while flag
     % Smoothing of the IC Power Time Course (used in the peak analysis)
     sIC = zeros(size(pIC));
     for i=1:size(IC,1)
-        % this relies on the curve fitting toolbox
-        %     sIC(i,:)=(smooth(pIC(i,:),101))';
-        sIC(i,:)=ft_preproc_smooth(pIC(i,:), 101);
+          sIC(i,:)=ft_preproc_smooth(pIC(i,:), 101);
     end
     
     
@@ -176,7 +162,6 @@ while flag
     disp('STAGE POST E');
     disp('unworking channel identification...');
     
-    % declare some variables
     ch_ic_list    = [];
     bad_channels  = [];
     bad_channels2 = [];
@@ -193,17 +178,15 @@ while flag
         
         if (strcmp(ch_method,'max_weight'))
             
-            if vt(1)/vt(2) > 10 % One channel is discarded if the IC weight is 10 times grater than the others
+            if vt(1)/vt(2) > 10 
                 flag_bad=1;
                 mth='val';
             end
         else
-            %         [histo_ch bins_ch]=hist(abs(A(:,i)),400);
             mean_weight=prctile(vt,50,1);
             std_weight=std(vt(2:end));
-            if vt(1)> mean_weight+threshold_std*std_weight % One channels is discarded if the IC weight is 10 times std out of the mean
+            if vt(1)> mean_weight+threshold_std*std_weight 
                 h_fig=figure;
-                %         set(h_fig, 'Position', [(size_s(1,3)-(border_x+size_fx)) border_x size_fx size_fy])
                 set(h_fig, 'visible', 'off','paperposition', [1 1 10 7]);
                 [histo_ch,bin_ch]=hist(vt,400);
                 hist(vt,400);
@@ -217,8 +200,7 @@ while flag
         end
         if(flag_bad==1)
             posi=[border_x border_x size_fx size_fy];
-            %       options={'plottype','components','component',i,'position',posi};
-            %       hcp_ICA_plot(comp_freq,options) % summary plots of the IC
+          
             if(strcmp(mth,'std'))
                 n_chan=size(find(vt>mean_weight+10*std_weight),1);
                 chan_lab(1,1:n_chan) = iteration(1,1).comp.topolabel(order(1:n_chan));
@@ -305,7 +287,7 @@ while flag
     end
     
     
-    %%%%%%%%%%%%% Graphically or automatically select the time intervals to be excluded %%%%%%%%%
+    %%%%%%%%%%%%% Manually or Automatically select the time intervals to be excluded %%%%%%%%%
     int_vect=[];
     while (ic_ind)
         disp('performing bad segments selection ');
@@ -336,7 +318,6 @@ while flag
             for i=1:20
                 infseg=max_ind2-i*500; if(infseg<1), infseg=1; end
                 supseg=max_ind2+i*500; if(supseg>size(IC2,2)), supseg=size(IC2,2); end
-                %         [junk over_thr]=find(sIC2(infseg+1:supseg)>sic_thr_par*ref_sIC);
                 [junk over_thr]=find(sIC2(infseg:supseg)>sic_thr_par*ref_sIC);
                 
                 if(~isempty(over_thr))
@@ -376,7 +357,6 @@ while flag
             cfg.layout=layout;
             
             h1_fig=figure;
-            %       set(h1_fig, 'Position', [75 75 size_s(1,3)-150 size_s(1,4)-150])
             set(h1_fig, 'visible', 'off','paperposition', [1 1 10 7]);
             
             subplot(2,3,3) ; plot(points_all,IC(ic_ind,:))
@@ -389,7 +369,6 @@ while flag
             line([mean_std+10*std_std mean_std+10*std_std], [0 max(histo)],'Color','r')
             legend('std distribution','mean and peak thr','Location','NorthOutside')
             line([mean_std mean_std], [0 max(histo)],'Color','r')
-            %             subplot(2,3,[1 2]) ; plot(IC2,'k')
             subplot(2,3,6) ; plot(sIC2,'k')
             line([1 size(IC2,2)], [sic_thr_par*ref_sIC sic_thr_par*ref_sIC],'Color','r')
             axis([1 length(sIC2) 0 max(sIC2)])
@@ -401,7 +380,6 @@ while flag
             title('Select time interval to be excluded...');
             
             
-            %             time_points=[1:cut_interval(1) cut_interval(2):length(IC)];
             if(strcmp(selmode,'user'))
                 
                 [X,Y] = ginput(2);
@@ -512,8 +490,7 @@ while flag
             end
         end
         
-        %modified in order to properly manage bad segments in samples. Should
-        %be done better
+
         options_ICA = ft_setopt(options_ICA, 'skipped_intervals', skint*dataraw.fsample);
         flag_int=1;
     end
@@ -522,25 +499,25 @@ while flag
     flag_bch=0;
     if(~isempty(bad_channels))
         flag_bch=1;
-        pv_bad_ch=ft_getopt(options_ICA, 'knownbadchannels'); % GIORGOS
+        pv_bad_ch=ft_getopt(options_ICA, 'knownbadchannels'); 
         bad_channels=horzcat(pv_bad_ch,bad_channels);
-        options_ICA = ft_setopt(options_ICA, 'knownbadchannels', bad_channels); % GIORGOS
+        options_ICA = ft_setopt(options_ICA, 'knownbadchannels', bad_channels); 
         bch2=horzcat(bch2,bad_channels2);
     end
     flag=(flag_bch+flag_int)-(flag_bch*flag_int);
     pause(3);
     it=it+1;
-    iter_res(1,it).bch=ft_getopt(options_ICA, 'knownbadchannels'); % GIORGOS
+    iter_res(1,it).bch=ft_getopt(options_ICA, 'knownbadchannels'); 
     iter_res(1,it).bch2=bch2;
     iter_res(1,it).skint=ft_getopt(options_ICA, 'skipped_intervals');
 end
 disp(' Finishing ICAqc ');
-bch= ft_getopt(options_ICA, 'knownbadchannels'); % GIORGOS
+bch= ft_getopt(options_ICA, 'knownbadchannels'); 
 
 bad_segments=round(skint*dataraw.fsample);
 bad_channels=unique(bch2);
 if isempty(bad_channels)
-    bad_channels=[]; % This is because in Matlab 2013a unique of an empty matrix return a 0x1 empty matrix
+    bad_channels=[]; 
 end
 imgname=[resultprefix '_icaqc_results' ];
 options={'plottype','components','saveres','yes','grad', dataraw.grad,'modality',modality,'saveformat','png','fileout',imgname,'visible','off'};

@@ -364,7 +364,7 @@ else
     badsegment.all       = [];
 end
 
-if(~isempty(badsegment.ica) & ~isempty(badsegment.ica))
+if(~isempty(badsegment.ica) && ~isempty(badsegment.manual))
 flagica=zeros(1,badsegment.manual(end,2));
 for i=1:size(badsegment.ica,1)
     flagica(badsegment.ica(i,1):badsegment.ica(i,2))=1;
@@ -381,6 +381,7 @@ junk=find(diffflag==-1);
 badsegmentica(:,2)=junk';
 badsegment.ica=badsegmentica;
 end
+
 
 % write it to an ascii file, this works just like a normal save command
 hcp_write_ascii(sprintf('%s_badsegments.txt', resultprefix), 'badsegment');

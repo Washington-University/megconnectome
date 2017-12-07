@@ -204,11 +204,17 @@ lay = ft_prepare_layout(cfg);
 if exist(hsname, 'file')
     shape = ft_read_headshape(hsname);
     f1 = figure;
-    a = [-0.15 0.15 -0.10 0.10 -0.10 0.15];
-    subplot(2,2,1); ft_plot_headshape(shape); view([-90 90]); axis(a); % top
-    subplot(2,2,2); ft_plot_headshape(shape); view([ 00 00]); axis(a); % right
-    subplot(2,2,3); ft_plot_headshape(shape); view([-90 00]); axis(a); % back
-    subplot(2,2,4); hold on; ft_plot_headshape(shape, 'fidlabel', false, 'fidcolor', 'none'); view([0 0]); ft_plot_sens(hdr.grad, 'chantype', 'megmag', 'coildiameter', coildiameter); axis(a);
+         a = [-0.15 0.15 -0.10 0.10 -0.10 0.15];
+    subplot(2,3,1); ft_plot_headshape(shape); view([-90 90]); axis(a); % top
+    subplot(2,3,4); hold on; ft_plot_headshape(shape, 'fidlabel', false, 'fidcolor', 'none'); view([-90 90]); ft_plot_sens(hdr.grad, 'chantype', 'megmag', 'coildiameter', coildiameter);
+    subplot(2,3,2); ft_plot_headshape(shape); view([ 00 00]); axis(a); % right
+    subplot(2,3,5); hold on; ft_plot_headshape(shape, 'fidlabel', false, 'fidcolor', 'none'); view([0 0]); ft_plot_sens(hdr.grad, 'chantype', 'megmag', 'coildiameter', coildiameter);
+    subplot(2,3,3); ft_plot_headshape(shape); view([-90 00]); axis(a); % back
+        subplot(2,3,6); hold on; ft_plot_headshape(shape, 'fidlabel', false, 'fidcolor', 'none'); view([90 0]); ft_plot_sens(hdr.grad, 'chantype', 'megmag', 'coildiameter', coildiameter);
+    %     subplot(2,2,1); ft_plot_headshape(shape); view([-90 90]); axis(a); % top
+    %     subplot(2,2,2); ft_plot_headshape(shape); view([ 00 00]); axis(a); % right
+    %     subplot(2,2,3); ft_plot_headshape(shape); view([-90 00]); axis(a); % back
+    %     subplot(2,2,4); hold on; ft_plot_headshape(shape, 'fidlabel', false, 'fidcolor', 'none'); view([0 0]); ft_plot_sens(hdr.grad, 'chantype', 'megmag', 'coildiameter', coildiameter); axis(a);
     figurefile = [output, '_headshape'];
     hcp_write_figure(figurefile, f1);
     close(f1);
@@ -520,7 +526,8 @@ if isfield(montage, 'labelorg') && ~isempty(montage.labelorg) % This check is pe
     cfg.detrend = 'no';
     cfg.bsfilter = 'yes';
     cfg.bsfreq = lfreq+[-1 1];
-    dataELECnew2 = ft_preprocessing(cfg, dataELECnew);clear dataELECnew;
+    dataELECnew2 = ft_preprocessing(cfg, dataELECnew);
+    clear dataELECnew
     
     cfg = [];
     cfg.detrend = 'no';

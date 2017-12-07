@@ -1,63 +1,100 @@
 function[trl,trlInfoColDescr,trialSummary,scanStartSamp,scanEndSamp,warninfo] = trialfun_Motort_BaseExtractAll( cfg )
-
-% This is the Trial Definition Function for Motor Task experiment.
-% The trigger is derived from the PhotoDiode transients on the trigger channle
-%__________________________________________________________________________
-%% Input:
-% cfg: Structure with fields that contain parameters for extracting trials
-% cfg.datafile: Char string represents filename of raw input MEG data
-% cfg.trialdef.stimulCode: Respresting the desired stimulus type to be extracted from the data with following integer values:
-%     1   -> Left Hand
-%     2   -> Left Foot
-%     3   -> Tongue
-%     4   -> Right Hand
-%     5   -> Right Foot
-%     6   -> Fixation
-% cfg.trialdef.TrigBasedOnEMG = 'yes' or 'no' (default = 'yes')
-% cfg.trialdef.cutMode = 'trials' or 'blocks' (default = 'trials')
-% cfg.trialdef.prestimTime: Desired time interval (in seconds) before Trigger onset.
-%       Must be positive. In 'blocks' mode, prestimTime w.r.t. first event.
-% cfg.trialdef.poststimTime: Desired time interval (in seconds) after Trigger onset.
-%       Must be positive. In 'blocks' mode, poststimTime w.r.t. last event.
-% cfg.trialdef.plotresults = 'yes' or 'no' (default = 'no')
-% cfg.trialdef.summaryfile: name of text file in order to save a sumamry of
-%                           the trial information as this is read from the triggers. It is used as a
-%                           quality check. If is empty nothing is printed.
-%__________________________________________________________________________
-%% Output:
-% trl: Ntrials-by-3 matrix with the trial definition
-% Column 1: Start sample for trials
-% Column 2: End sample for trials
-% Column 3: Offset of beginning of each trial from Trigger onset in Samples (i.e. -100).
-%__________________________________________________________________________
-%% === Example 1:
-% cfg = [];
-% cfg.datafile = 'xxx\c,rfDC';% xxx is directory of the raw MEG scan
-% cfg.trialfun = 'trialfun_Motort_Base';
-% cfg.trialdef.stimulCode = 4; % 1->Left Hand, 2->Left Foot, 3->Tongue, 4->Right Hand, 5->Right Foot, 6->Fixation
-% cfg.trialdef.prestimTime = 0.1;
-% cfg.trialdef.poststimTime = 0.5;
-% %cfg.trialdef.TrigBasedOnEMG = 'yes';%(default = 'yes')
-% %cfg.trialdef.cutMode = 'trials';%(default = 'trials')
-% %cfg.trialdef.plotresults = 'no';%(default = 'no')
-% cfgDefTr = ft_definetrial(cfg);
-% cfgDefTr.dataformat = '4d';
-% cfgDefTr.headerformat = '4d';
-% dataRaw = ft_preprocessing(cfgDefTr);
-%% === Example 2:
-% cfg = [];
-% cfg.datafile = 'xxx\c,rfDC';% xxx is directory of the raw MEG scan
-% cfg.trialfun = 'trialfun_Motort_Base';
-% cfg.trialdef.stimulCode = 2; % 1->Left Hand, 2->Left Foot, 3->Tongue, 4->Right Hand, 5->Right Foot, 6->Fixation
-% cfg.trialdef.prestimTime = 0;
-% cfg.trialdef.poststimTime = 0.5;
-% cfg.trialdef.TrigBasedOnEMG = 'no';%(default = 'yes')
-% cfg.trialdef.cutMode = 'blocks';%(default = 'trials')
-% cfg.trialdef.plotresults = 'yes';%(default = 'no')
-% cfgDefTr = ft_definetrial(cfg);
-% cfgDefTr.dataformat = '4d';
-% cfgDefTr.headerformat = '4d';
-% dataRaw = ft_preprocessing(cfgDefTr);
+%% This is the Trial Definition Function for Motor experiment.
+% It extracts the trial definition for ALL trials within each of different
+% datagroup.
+% There are 2 different data groups for Motor task.
+%
+% DATA GROUPS
+%----------------------------------
+% 1. mnemonic: TFLA.     description: Onset of flashing cross that instructs 
+%                                       subject to perform movement by hand or foot.
+% 2. mnemonic: TEMG. 	 description: Onset of the emg signal from hand or 
+%                                       foot recorded muscles.
+%
+% 
+%
+% INPUT VARIABLE
+%----------------------------------
+% cfg : This is a structure containing information required for extracting
+%       the trials for either of the 2 data groups described above.
+%       Fields:
+%               .datafile: This is the filename of the raw data file.
+%               .trialdef: This is a structure containing the parameters
+%                          required to split the data into the trials of either data
+%                          group.
+%                          Fields:
+%                          .trialdef.TrigBasedOnEMG = 'yes' or 'no';   % Defines the 0 reference time of eahc trial
+%                                                                          according to the desired data group.
+%                                                                          'yes' for TEMG,'no' for TFLA data group
+%                                                                      
+%                          .trialdef.cutMode = 'trials';               % This representes that data will be cut in trials
+%                                                                      %  and not in blocks. The same for both data groups
+%                          .trialdef.preStimTime = 1.2;                % Time interval prior to 0 reference point for each trial 
+%                          .trialdef.postStimTime = 1.2;               % Time interval after the 0 reference point for each trial 
+%                          .trialdef.montage                % This is the montage containing the emg channels. This
+%                                                               variable is constructed by the hcp_exgmontage.m function. 
+%                                                               In .labelnew subfield , the expected 
+%                                                               emg channels names are  expected to be 
+%                                                               {'EMG_LH','EMG_LF','EMG_RH','EMG_RF'}         
+%
+%
+%
+% OUTPUT VARIABLES
+%-----------------------------------
+% trl: This is a numerical matrix.  Each column corresponds to a trial and
+%      each column to a specific condition of piece of information, quantified numerically , regarding
+%      each trial. The first 3 Columns describe the trial start sample, end sample and time offset 
+%      of the start of the trial relative to the 0 reference point. These 3
+%      columns are used by fieldtrip as the necessary information required
+%      to extract the data for each trial.
+%      The rest of the columns encode various types of information about
+%      each trial. This part of the trl Matrix , from column 4 to the last
+%      column, should be refered to as 'trialinfo' part of the trl matrix.
+%
+% trlInfoColDescr: This is a cell array. Each element is a string
+%                  describing the type of information encoded by the corresponding column of
+%                  the 'trialinfo' part of trl matrix described above. 
+%
+% trialSummary:    This is a structure containing an overview of the breakdown of the data
+%                  in trials of the main conditions for BOTH data groups.
+%                  This is used for Quality Control purposes in order to
+%                  ensure that the correct number of trials for each of
+%                  the main conditions is present in the data and identifying any
+%                  discrepances due to problems in the stimulus presentation protocol.
+%
+% scanStartSamp:   This is the sample number of the onset of the first
+%                  stimulus block.
+% scanEndSamp:     This is the sample number of the offset of the last
+%                  stimulus block.
+% warninfo:        This is cell variable used for Quality Control , in
+%                  order to catch problems with unexpected trigger values.
+%
+%
+% Below is presented, for convenience of the reader, the description of
+% each column of the 'trialinfo' part of trl matrix described above and 
+% contained in the trlInfoColDescr output variable. 
+%
+%
+% Trialinfo Column Description as presented in trlInfoColDescr output variable
+%-------------------------------------------------------------------------------
+%========================================================================
+% data group: TFLA
+%------------------
+%  ' 1. Block Index  '
+%  ' 2. Block Stim Code:    1-Left Hand,  2 - Left Foot, 4 - Right Hand. 5 - Right Foot, 6 - Fixation'
+%  ' 3. Trial Index in Block 
+%  ' 4. Trial Onset Sample'
+%  ' 5. prev. Block Stim Code'};
+%========================================================================
+% data group: TEMG
+%------------------
+%  ' 1. Block Index  '
+%  ' 2. Block Stim Code:    1-Left Hand,  2 - Left Foot, 4 - Right Hand. 5 - Right Foot, 6 - Fixation'
+%  ' 3. Trial Index in Block (This is derived by finding the flash cross onset just before the EMG onset)'
+%  ' 4. Trial EMG Onset Sample'
+%  ' 5. prev. Block Stim Code'
+%  ' 6. Time from EMG onset to the previous Flashing Cross'
+%========================================================================
 
 % Copyright (C) 2011-2013 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
 %
@@ -491,13 +528,17 @@ end
 % 6. Time from EMG onset to the previous Flashing Cross
 
 motorBlockColumnDescription={''}; % IF BLOCKS ARE ANALYZED AS A WHOLE ADD DESCRIPTION
-motorTrlColumnDescription={' 1. Block Index  '
+motorTrlColumnDescriptionEMG={' 1. Block Index  '
     ' 2. Block Stim Code:    1-Left Hand,  2 - Left Foot, 4 - Right Hand. 5 - Right Foot, 6 - Fixation'
     ' 3. Trial Index in Block (This is derived by finding the flash cross onset just before the EMG onset)'
-    ' 4. Trial Onset EMG Sample'
+    ' 4. Trial EMG Onset Sample'
     ' 5. prev. Block Stim Code'
     ' 6. Time from EMG onset to the previous Flashing Cross'};
-
+motorTrlColumnDescription={' 1. Block Index  '
+    ' 2. Block Stim Code:    1-Left Hand,  2 - Left Foot, 4 - Right Hand. 5 - Right Foot, 6 - Fixation'
+    ' 3. Trial Index in Block '
+    ' 4. Trial Onset Sample'
+    ' 5. prev. Block Stim Code'};
 
 motorBlockInfo=allBlockInfo((allBlockInfo(:,2)~=6),:);
 
@@ -550,13 +591,28 @@ if hasEMG
     %     end
     %==================================================
     %-- Fuse with trial info from flashing cross
-    NemgTrials=size(tmpInfoEMG);
-    
+    %-------------------------------------------------------------------------
+    NemgTrials=size(tmpInfoEMG,1);
+    indPreEmpty=[];
+    for iTrial=1:NemgTrials,
+        iTrial
+        tmpIndx=find(motorTrialInfo(:,4)<tmpInfoEMG(iTrial,4),1,'last');
+        if isempty(tmpIndx),
+            indPreEmpty=[indPreEmpty ; iTrial];
+        end
+    end
+    if ~isempty(indPreEmpty)
+       tmpInfoEMG(indPreEmpty,:)=[]; 
+       NemgTrials=size(tmpInfoEMG,1);
+    end
+    %-------------------------------------------------------------------------
     for iTrial=1:NemgTrials,
         tmpIndx=find(motorTrialInfo(:,4)<tmpInfoEMG(iTrial,4),1,'last');
         tmpInfoEMG(iTrial,3)=motorTrialInfo(tmpIndx,3);
         tmpInfoEMG(iTrial,6)=(1/Fsample)*(tmpInfoEMG(iTrial,4) -motorTrialInfo(tmpIndx,4));
     end
+    %-------------------------------------------------------------------------
+    
 end
 motorTrialInfoEMG=tmpInfoEMG;
 
@@ -602,7 +658,12 @@ elseif strcmp(cutMode,'trials')
         psfixtrl(i1,:)=[];
     end
     
-    trlInfoColDescr=motorTrlColumnDescription;
+    
+    if strcmpi(TrigBasedOnEMG, 'yes'),
+        trlInfoColDescr=motorTrlColumnDescriptionEMG;
+    elseif strcmpi(TrigBasedOnEMG, 'no'),
+        trlInfoColDescr=motorTrlColumnDescription;
+    end
 end
 
 

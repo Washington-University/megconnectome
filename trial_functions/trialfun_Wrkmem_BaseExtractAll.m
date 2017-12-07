@@ -1,47 +1,113 @@
 function    [trl,trlInfoColDescr,trialSummary,scanStartSamp,scanEndSamp,warninfo]= trialfun_Wrkmem_BaseExtractAll( cfg )
-
-% This is the Trial Definition Function for Working Memomory experiment.
-% The trigger is derived from the PhotoDiode & Parallel Port transients on the trigger channle.
+%% This is the Trial Definition Function for Working Memomory experiment.
+% It extracts the trial definition for ALL trials within each of different
+% datagroup.
+% There are 2 different data groups for Working Memory
 %
-% FIXME !!!! everything is derived from parallel port trigger at the moment !!!!
-%_
-% This function extract information about all trials 
-% Input:
-% cfg: Structure with fields that contain parameters for extracting trials
-% cfg.datafile: Char string represents filename of raw input MEG data
-% cfg.trialdef.cutMode = 'trials','blocks' or 'fixation' (default = 'trials')
-%       'trials': Each trial corresponding to each stimulus is cut
-%       separately. Fixation blocks are chopped in equal length trials and
-%       appended at the end.
-%       'blocks': The data is cut in the actual stimuli blocks. Each block has 10 trials.
-%       'fixation': Only the fixation blocks
-% 
-% cfg.trialdef.lockedOn = 'Image' or 'Response' (default = 'Image')
-%       [Will be used if only .trialdef.cutMode == 'trials']
-%       'Image': Trial based on the ONSET of image presentation
-%       'Response': Trial based on the subject's response (key pressed) time
-% 
-% cfg.trialdef.prestimTime: Desired time interval before Trigger onset - in seconds. Must be positive.
-%       If .cutMode=='trials', then this is the time before the trial ONSET trigger.
-%       If .cutMode=='blocks', then this is the time before the block ONSET trigger.
-%       If .cutMode=='fixation', then this is the time before the fixation ONSET trigger.
-% 
-% cfg.trialdef.poststimTime: Desired time interval after Trigger onset - in seconds. Must be positive.
-%       If .cutMode=='trials', then this is the time after the trial ONSET trigger.
-%       If .cutMode=='blocks', then this is the time after the block OFFSET trigger. It adds a timing pad after the end of block.
-%       If .cutMode=='fixation', then this is the time after the fixation OFFSET trigger. It adds a timing pad after the end of fixation.
-% 
-% cfg.trialdef.plotresults = 'yes' or 'no' (default = 'no')
-% 
-% FIXME !!!! The following option in not working yet !!!!
-% ----------------------------------------------------------
-% cfg.badsegment: Bad segment of data. Trigger will be forced to zero in bad segments. For example, actual recording for "Wrkmem_MEB_V2" was started after 78 seconds.
-% ----------------------------------------------------------
+% DATA GROUPS
+%----------------------------------
+% 1. mnemonic: TIM.     description: Onset of an image that the subject has.to match or not with the target image.
+% 2. mnemonic: TRESP. 	description: Onset of button press by the subject.
 %
-% Output:
-%  The first 3 columns of the outputmatrix trl are the typical Fieldtrip trl
-%  matrix with first column the beginning of trial , the second the end of
-%  trial and the third the offset of the beginning of trial from trigger.
+% 
+% INPUT VARIABLE
+%----------------------------------
+% cfg : This is a structure containing information required for extracting
+%       the trials for either of the 2 data groups described above.
+%       Fields:
+%               .datafile: This is the filename of the raw data file.
+%               .trialdef: This is a structure containing the parameters
+%                          required to split the data into the trials of either data
+%                          group.
+%                          Fields:
+%                          .trialdef.lockedOn = 'Image' or 'Response'; % Defines the 0 reference time of eahc trial
+%                                                                      %  according to the desired data group
+%                          .trialdef.cutMode = 'trials';               % This representes that data will be cut in trials
+%                                                                      %  and not in blocks. The same for both data groups
+%                          .trialdef.preStimTime = 1.5;                % Time interval prior to 0 reference point for each trial 
+%                          .trialdef.postStimTime = 2.5;               % Time interval after the 0 reference point for each trial 
+%
+%
+% OUTPUT VARIABLES
+%-----------------------------------
+% trl: This is a numerical matrix.  Each column corresponds to a trial and
+%      each column to a specific condition of piece of information, quantified numerically , regarding
+%      each trial. The first 3 Columns describe the trial start sample, end sample and time offset 
+%      of the start of the trial relative to the 0 reference point. These 3
+%      columns are used by fieldtrip as the necessary information required
+%      to extract the data for each trial.
+%      The rest of the columns encode various types of information about
+%      each trial. This part of the trl Matrix , from column 4 to the last
+%      column, should be refered to as 'trialinfo' part of the trl matrix.
+%
+% trlInfoColDescr: This is a cell array. Each element is a string
+%                  describing the type of information encoded by the corresponding column of
+%                  the 'trialinfo' part of trl matrix described above. 
+%
+% trialSummary:    This is a structure containing an overview of the breakdown of the data
+%                  in trials of the main conditions for BOTH data groups.
+%                  This is used for Quality Control purposes in order to
+%                  ensure that the correct number of trials for each of
+%                  the main conditions is present in the data and identifying any
+%                  discrepances due to problems in the stimulus presentation protocol.
+%
+% scanStartSamp:   This is the sample number of the onset of the first
+%                  stimulus block.
+% scanEndSamp:     This is the sample number of the offset of the last
+%                  stimulus block.
+% warninfo:        This is cell variable used for Quality Control , in
+%                  order to catch problems with unexpected trigger values.
+%
+%
+% Below is presented, for convenience of the reader, the description of
+% each column of the 'trialinfo' part of trl matrix described above and 
+% contained in the trlInfoColDescr output variable. The description is the
+% same for both TIM and TRESP data groups.
+%
+%
+% Trialinfo Column Description as presented in trlInfoColDescr output variable
+%-------------------------------------------------------------------------------
+%========================================================================
+% '1. Run Number'
+% '2. Block Number within run'
+% '3. Nan.  ( This column has been reserved to contain the image ID number which is not encoded in the trigger values. This is not yet implemented.)'
+% '4. imgType : 1- Face, 2- Tools  0- Fixation'
+% '5. memoryType :  1: 0-Back   2: 2-Back'
+% '6. targetType : 1- target, 2- nontarget,  3: lure '
+% '7. Trial trigger onset Sample '
+% '8. Trial trigger offset Sample'
+% '9. Sequence of image in the block'
+% '10. isPressed :  0- user did not press any response button, 1- user pressed a response button'
+% '11. isPressedLate:  1- If subject responded after the 2 seconds that the image is at the longest displayed and before the next  trial \n    0- If pressed within the presentation time of the image\n ,      NaN: Otherwise'
+% '12. isDoubleResponse: 1- user pressed two response buttons in the same trial \n    0: user DID NOT press two response buttons in the same trial'
+% '13. pressedCode: Code of the pressed button (If not pressed NaN)'
+% '14. isCorrect:  1- If subject has responded that saw a target when a actual target was on or that saw a nontarget when a actual nontarget was on \n      0:  The opposite of the above.\n      NaN:  When subject has not responded or has pressed two  buttons'
+% '15. isLureAsCorrect: 1- If subject has responded that saw a target when a lure image of actual target was on \n , 0: In all other cases that a subject has responded\n  NaN:  When subject has not responded or has pressed two buttons'
+% '16. respTime: The time from onset of Image to response (sec)'
+% '17. respDuration: Duration of button press in seconds'
+% '18. isFirstInBlock'
+% '19. isLastInBlockk'
+% '20. prev. Trial: Run Number'
+% '21. prev. Trial: Block Number'
+% '22. prev. Trial: Nan.  ( This column has been reserved to contain the image ID number which is not encoded in the trigger values. This is not yet implemented.)'
+% '23. prev. Block: imgType : 1- Face, 2-Tools  0- Fixation'
+% '24. prev. Block: memoryType :  1: 0-Back   2: 2-Back'
+% '25. prev. Trial: targetType : 1- target, 2- nontarget,  3: lure '
+% '26. prev. Trial: Trial start Sample'
+% '27. prev. Trial: Trial end Sample'
+% '28. prev. Trial: Sequence of image in the block'
+% '29. prev. Trial: isPressed :  0- user did not press any response button, 1- user pressed a response button'
+% '30. prev. Trial: isPressedLate:  1- If subject responded after the 2 seconds that the image is at the longest displayed and before the next  trial \n    0- If pressed within the presentation time of the image\n ,      NaN: Otherwise'
+% '31. prev. Trial: isDoubleResponse: 1- user pressed two response buttons in the same trial \n    0: user DID NOT press two response buttons in the same trial'
+% '32. prev. Trial: pressedCode: Code of the pressed button (If not pressed NaN)'
+% '33. prev. Trial: isCorrect:  1- If subject has responded that saw a target when a actual target was on or that saw a nontarget when a actual nontarget was on \n      0:  The opposite of the above.\n      NaN:  When subject has not responded or has pressed two  buttons'
+% '34. prev. Trial: isLureAsCorrect: 1- If subject has responded that saw a target when a lure image of actual target was on \n , 0: In all other cases that a subject has responded\n  NaN:  When subject has not responded or has pressed two buttons'
+% '35. prev. Trial: respTime: The time from onset of Image to response (sec)'
+% '36. prev. Trial: respDuration: Duration of button press in seconds'
+% '37. prev. Trial: isFirstInBlock'
+% '38. prev. Trial: isLastInBlock'
+% '39. Is button pressed during onset of the stimulus (New field)'};
+%==========================================================================
 
 % Copyright (C) 2011-2013 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
 %
@@ -64,8 +130,8 @@ function    [trl,trlInfoColDescr,trialSummary,scanStartSamp,scanEndSamp,warninfo
 % The remaining 39 columns are:
 %===== COLUMNS:
 trlColDescr={'1. Run Number'
-'2. Block Number'
-'3. Image Index in the list of all images.Not yet available. TODO: Add it here'
+'2. Block Number within run'
+'3. Nan.  ( This column has been reserved to contain the image ID number which is not encoded in the trigger values. This is not yet implemented.)'
 '4. imgType : 1- Face, 2- Tools  0- Fixation'
 '5. memoryType :  1: 0-Back   2: 2-Back'
 '6. targetType : 1- target, 2- nontarget,  3: lure '
@@ -78,13 +144,13 @@ trlColDescr={'1. Run Number'
 '13. pressedCode: Code of the pressed button (If not pressed NaN)'
 '14. isCorrect:  1- If subject has responded that saw a target when a actual target was on or that saw a nontarget when a actual nontarget was on \n      0:  The opposite of the above.\n      NaN:  When subject has not responded or has pressed two  buttons'
 '15. isLureAsCorrect: 1- If subject has responded that saw a target when a lure image of actual target was on \n , 0: In all other cases that a subject has responded\n  NaN:  When subject has not responded or has pressed two buttons'
-'16. respTime: The number of samples from onset of Image to response'
+'16. respTime: The time from onset of Image to response (sec)'
 '17. respDuration: Duration of button press in seconds'
 '18. isFirstInBlock'
 '19. isLastInBlockk'
 '20. prev. Trial: Run Number'
 '21. prev. Trial: Block Number'
-'22. prev. Trial: Image Index in the list of all images.Not yet available. TODO: Add it here'
+'22. prev. Trial: Nan.  ( This column has been reserved to contain the image ID number which is not encoded in the trigger values. This is not yet implemented.)'
 '23. prev. Block: imgType : 1- Face, 2-Tools  0- Fixation'
 '24. prev. Block: memoryType :  1: 0-Back   2: 2-Back'
 '25. prev. Trial: targetType : 1- target, 2- nontarget,  3: lure '
@@ -97,7 +163,7 @@ trlColDescr={'1. Run Number'
 '32. prev. Trial: pressedCode: Code of the pressed button (If not pressed NaN)'
 '33. prev. Trial: isCorrect:  1- If subject has responded that saw a target when a actual target was on or that saw a nontarget when a actual nontarget was on \n      0:  The opposite of the above.\n      NaN:  When subject has not responded or has pressed two  buttons'
 '34. prev. Trial:isLureAsCorrect: 1- If subject has responded that saw a target when a lure image of actual target was on \n , 0: In all other cases that a subject has responded\n  NaN:  When subject has not responded or has pressed two buttons'
-'35. prev. Trial: respTime: The number of samples from onset of Image to response'
+'35. prev. Trial: respTime: The time from onset of Image to response (sec)'
 '36. prev. Trial: respDuration: Duration of button press in seconds'
 '37. prev. Trial: isFirstInBlock'
 '38. prev. Trial: isLastInBlock'
@@ -117,7 +183,7 @@ lockedOn=cfg.trialdef.lockedOn;
 idealISItime=2.5; % This is used to cut Fixation in a similar fashion as the stim blocks
 %==========================================================================
 %% Read the data file 
-hdr = read_header(datafile);
+hdr = ft_read_header(datafile);
 Fsample = hdr.Fs;
 trg_resp = ft_read_data(datafile,'chanindx',[1 2],'header',hdr,'eventformat','4d','dataformat','4d');
 
@@ -340,8 +406,25 @@ if NeventsPhoto~=NImgEventsPP,
         tmpIndPhoto_UPDOWN=indPhoto_UPDOWN;
         tmpIndPhoto_UPDOWN(unique([indRand indRand+1]))=[];
         indPhoto_UPDOWN=tmpIndPhoto_UPDOWN;
-    else
-       error('The image onsets-offsets is different in the photodiode and parallel port triggers');
+   else
+        
+        if (NeventsPhoto-NImgEventsPP)==2,
+            diffTimePhotoUP=(1/Fsample)*diff(indPhoto_UP);
+            indDiffLong=find(diffTimePhotoUP>25);
+            if length(indDiffLong)>1
+                error('There are more than one extra up-down photodiode events');
+            end
+            if indDiffLong~=1,
+                error('There is one extra up-down photodiode event but is not at the beginnin of the scan');
+            end
+            indPhoto_UPDOWN(1:2)=[];
+            indPhoto_UP(1)=[];
+            indPhoto_DOWN(1)=[];
+            NeventsPhoto=length(indPhoto_UPDOWN);
+            
+        else
+            error('The image onsets-offsets is different in the photodiode and parallel port triggers');
+        end
     end
     
 end

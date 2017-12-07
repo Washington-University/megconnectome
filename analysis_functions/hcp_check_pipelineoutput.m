@@ -294,24 +294,24 @@ switch pipeline
     end
     
   case 'anatomy'
-    assert_file('%s_anatomy_anatomical.nii', subject);
-    assert_file('%s_anatomy_fiducials.txt', subject);
-    assert_file('%s_anatomy_landmarks.txt', subject);
-    assert_file('%s_anatomy_transform.txt', subject);
-    assert_file('%s_anatomy_sourcemodel2d.mat', subject);
-    assert_file('%s_anatomy_sourcemodel3d4mm.mat', subject);
-    assert_file('%s_anatomy_sourcemodel3d6mm.mat', subject);
-    assert_file('%s_anatomy_sourcemodel3d8mm.mat', subject);
-    assert_file('%s_anatomy_headshape.mat', subject);
-    assert_file('%s_anatomy_headshapemri.mat', subject);
-    assert_file('%s_anatomy_headmodel.mat', subject);
-    assert_file('%s_anatomy_headmodel.png', subject);
-    assert_file('%s_anatomy_sourcemodel_2d.png', subject);
-    assert_file('%s_anatomy_sourcemodel_3d.png', subject);
-    assert_file('%s_anatomy_slice1.png', subject);
-    assert_file('%s_anatomy_slice2.png', subject);
-    assert_file('%s_anatomy_slice3.png', subject);
-    assert_file('%s_anatomy_headshape.png', subject);
+    assert_file('%s_MEG_anatomy_anatomical.nii',       subject);
+    assert_file('%s_MEG_anatomy_fiducials.txt',        subject);
+    assert_file('%s_MEG_anatomy_landmarks.txt',        subject);
+    assert_file('%s_MEG_anatomy_transform.txt',        subject);
+    assert_file('%s_MEG_anatomy_sourcemodel_2d.mat',    subject);
+    assert_file('%s_MEG_anatomy_sourcemodel_3d4mm.mat', subject);
+    assert_file('%s_MEG_anatomy_sourcemodel_3d6mm.mat', subject);
+    assert_file('%s_MEG_anatomy_sourcemodel_3d8mm.mat', subject);
+    assert_file('%s_MEG_anatomy_headshape.mat',        subject);
+    assert_file('%s_MEG_anatomy_headshapemri.mat',     subject);
+    assert_file('%s_MEG_anatomy_headmodel.mat',        subject);
+    assert_file('%s_MEG_anatomy_headmodel.png',        subject);
+    assert_file('%s_MEG_anatomy_sourcemodel_2d.png',   subject);
+    assert_file('%s_MEG_anatomy_sourcemodel_3d4mm.png', subject);
+    assert_file('%s_MEG_anatomy_slice1.png',           subject);
+    assert_file('%s_MEG_anatomy_slice2.png',           subject);
+    assert_file('%s_MEG_anatomy_slice3.png',           subject);
+    assert_file('%s_MEG_anatomy_headshape.png',        subject);
     
   case 'datacheck'
     assert_file('%s_%s_datacheck_info.txt', experiment, scan);
@@ -329,7 +329,7 @@ switch pipeline
     assert_file('%s_%s_icamne_%s_1.png', experiment, scan, sourcemodel_type);% there can be more figures, but at least one is expected
     
   case 'icaimagcoh'
-    assert_file('%s_%s_icaimagcoh_%s_freq%s.mat', experiment, scan, sourcemodel_type, freq);
+    assert_file('%s_%s_icaimagcoh_%sHz.mat', experiment, scan, freq);
     
   case 'icapowenv'
     assert_file('%s_%s_blp_%s_%s.mat', experiment, scan, sourcemodel_type, band);

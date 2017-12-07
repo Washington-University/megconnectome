@@ -1,4 +1,7 @@
 function    [trl,trlInfoColDescr, trialSummary, scanStartSamp, scanEndSamp, warninfo] = trialfun_Motort( cfg )
+%% This is a wrapper function for the Motor core trial definition function trialfun_Motort_BaseExtractAll.m
+% See the help notes of this core function for information on input and
+% output variables.
 
 % Copyright (C) 2011-2013 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
 %

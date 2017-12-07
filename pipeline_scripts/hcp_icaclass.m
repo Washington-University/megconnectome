@@ -223,7 +223,7 @@ else
         error(['NO ECG VEOG ot HEOG found in the dataset . Check data and/or montage for  ',experimentid,'_',scanid]);
         return;
     end
-    clear tmpIndx1 tmpIndx2;
+    clear tmpIndx1 tmpIndx2
     
     options     = ft_setopt(options, 'ref_channels', icaref);
     options     = ft_setopt(options, 'subject', resultprefix);
@@ -232,7 +232,7 @@ else
     ref_data    = hcp_ICA_preprocessing(dataELECnew, options_ref);
 end
 %========================================================
-clear icaref options_ref;
+clear icaref options_ref
 
 comp_class = hcp_ICA_RMEG_classification(ref_data,options,iteration,datain);
 
@@ -251,11 +251,11 @@ vs.flag=0;
 vs.physio=[];
 hcp_write_ascii(sprintf('%s_icaclass.txt', resultprefix), 'vs');
 
-clear iteration datain comp_class options;
-clear resultprefix dataraw badsegments badchannels sel_channels grad bandpass bandstop ica_iter;
-clear data_meg montage dataELEC dataELECnew ref_data;
-clear oldMotorExperimentIds isMotorTask isScanWithOldMotor;
-clear cfg;
+clear iteration datain comp_class options
+clear resultprefix dataraw badsegments badchannels sel_channels grad bandpass bandstop ica_iter
+clear data_meg montage dataELEC dataELECnew ref_data
+clear oldMotorExperimentIds isMotorTask isScanWithOldMotor
+clear cfg
 
 % ensure that the expected output files were created
 hcp_check_pipelineoutput('icaclass', 'subject', subjectid, 'experiment', experimentid, 'scan', scanid);

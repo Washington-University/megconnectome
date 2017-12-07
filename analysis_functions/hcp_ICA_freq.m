@@ -28,32 +28,47 @@ function [comp] = hcp_ICA_freq(comp, options, datain)
 %   saveres:    'yes' or 'no' save the resutls in a file (default = 'no')
 %   saveformat: image file format (default 'fig')
 %   grad:       fieldtrip gradiometer structure
+%
+% See also HCP_ICA_PLOT HCP_ICA_PLOTCLASSIFICATION HCP_ICA_RMEG_CLASSIFICATION
+
+% Copyright (C) 2011-2014 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
+%
+% This file is part of megconnectome.
+%
+% megconnectome is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+%
+% megconnectome is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with megconnectome.  If not, see <http://www.gnu.org/licenses/>.
 
 switch nargin
     case 3
         % reconstruct the component time courses from the data and the unmixing
         % matrix
-        %     comp.time     = datain.time;
         cfg           = [];
         cfg.unmixing  = comp.unmixing;
         cfg.topolabel = comp.topolabel;
         cfg.order     = comp.order;
         comp          = ft_componentanalysis(cfg, datain);
         comp.order    = cfg.order;
-        %     comp.trial{1} = comp.unmixing*datain.trial{1};
     case 2
         % check whether IC time courses are in the first input
         if ~isfield(comp,'trial') , error('IC time course not defined, data matrix required'); end
     case 1
         error('too few input arguments');
-        % FIXME in principle this should work because then all options should
-        % be set to default within the function
         if ~isfield(comp,'trial') , error('IC time course not defined, data matrix required'); end
     otherwise
         error('too many input arguments');
 end
 
-cfgin.doplot   = ft_getopt(options, 'doplot', 'no'); % FIXME I think the plotting should not be done within this function
+cfgin.doplot   = ft_getopt(options, 'doplot', 'no');
 cfgin.grad     = ft_getopt(options, 'grad');
 
 if ~isempty(cfgin.grad),
@@ -76,10 +91,7 @@ cfg.taper    = 'hamming';
 freq_comp    = ft_freqanalysis(cfg,comp_seg);
 comp.freq_comp=freq_comp;
 
-%--------------------------------
 %----> IC POWER TIME COURSE <----
-%--------------------------------
-
 cfg               = [];
 cfg.bpfilter      = 'no'; %'no' or 'yes'  bandpass filter (default = 'no')
 cfg.bpfreq        = [1 150];
@@ -94,5 +106,5 @@ comp.pIC      = pIC;
 comp.pow_data = pow_data;
 
 if strcmp(cfgin.doplot,'yes')
-    hcp_ICA_plot(comp,options);
+    hcp_ICA_plot(comp,options); % plot results
 end

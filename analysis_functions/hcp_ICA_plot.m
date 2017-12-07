@@ -7,7 +7,7 @@ function hcp_ICA_plot(comp_freq, options)
 % two different layouts (see cfg.plottype)
 %
 % Use as
-%   hcp_ICA_freq(comp_freq, options, datain)
+%   hcp_ICA_plot(comp_freq, options, datain)
 % where the input comp_freq structure should be obtained from FT_COMPONENTANALYSIS and
 % the datain structure is a fieldtrip data structure contining the channel time courses
 % used as imput of the FT_COMPONENTANALYSIS .
@@ -20,13 +20,32 @@ function hcp_ICA_plot(comp_freq, options)
 %   saveres            : 'yes' or 'no' save the resutls in a file (default = 'no')
 %   saveformat         : image file format (default 'fig')
 %   grad               : fieldtrip gradiometer structure
+%
+% See also HCP_ICA_FREQ HCP_ICA_PLOTCLASSIFICATION HCP_ICA_RMEG_CLASSIFICATION
+
+% Copyright (C) 2011-2014 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
+%
+% This file is part of megconnectome.
+%
+% megconnectome is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+%
+% megconnectome is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with megconnectome.  If not, see <http://www.gnu.org/licenses/>.
 
 Nc = size(comp_freq.topo,2);
 
 cfgin.plottype   = ft_getopt(options, 'plottype',   'components'); %summary or components
-cfgin.saveres    = ft_getopt(options, 'saveres');
+cfgin.saveres    = ft_getopt(options, 'saveres'); 
 cfgin.saveformat = ft_getopt(options, 'saveformat', 'fig');
-cfgin.fileout    = ft_getopt(options, 'fileout');
+cfgin.fileout    = ft_getopt(options, 'fileout'); 
 cfgin.parameter  = ft_getopt(options, 'parameter',  'topo');
 cfgin.component  = ft_getopt(options, 'component',  1:Nc);
 cfgin.comment    = ft_getopt(options, 'comment',    'no');
@@ -125,7 +144,6 @@ elseif strcmp(cfgin.plottype,'components')
         if(~isempty(cfgin.posi))
             f = figure;
             set(f, 'visible', fvis,'on','Position', cfgin.posi);
-            %      set(f, 'Position', cfgin.posi)
         else
             f = figure;
             set(f, 'visible', fvis);

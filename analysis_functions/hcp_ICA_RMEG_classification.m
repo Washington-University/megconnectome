@@ -54,11 +54,9 @@ cfgin.store_bestcomp     = ft_getopt(options, 'store_bestcomp');
 cfgin.saveres  = ft_getopt(options, 'saveres');
 cfgin.saveformat     = ft_getopt(options, 'saveformat');
 
-% if isempty(cfgin.dataset)  , cfgin.dataset = '0'; end
 if isempty(cfgin.ref_channels)  , cfgin.ref_channels = {'E31', 'E32'}; end
 if isempty(cfgin.bpfreq) , cfgin.bpfreq = iteration(1,1).comp(1,1).bandpass ; end
 if isempty(cfgin.bsfreq) , cfgin.bsfreq = iteration(1,1).comp(1,1).bandstop ; end
-% if isempty(cfgin.grad) ,  sens=ft_read_sens(cfgin.dataset) ; cfgin.grad = sens ; end
 if isempty(cfgin.showbestit), cfgin.showbestit = 'no'; end
 if isempty(cfgin.plottype)  , cfgin.plottype = 'summary'; end
 if isempty(cfgin.store_bestcomp)    , cfgin.store_bestcomp = 'yes';             end
@@ -69,11 +67,6 @@ cfgin.zlim='maxabs';
 nref=0;
 
 if isfield(cfgin,'ref_channels')
-    
-    %     if ischar(ref_data)
-    %         options=ft_setopt(options,'channels',cfgin.ref_channels)
-    %     ref_data = hcp_ICA_preprocessing(ref_data, options);
-    %     end
     
     nref= size(ref_data.trial{1},1);
     ntrl= size(ref_data.trial,2)
@@ -100,7 +93,7 @@ if isfield(cfgin,'ref_channels')
     end
     imgname=[subject '_icaclass_refch'];
     hcp_write_figure(imgname, h);
-    clear h; % FIXME should this be clear or close?
+    clear h;
     
     %   ----- Time Course of Power of Electric Channels -----------------------
     
@@ -133,7 +126,6 @@ if isfield(cfgin,'ref_channels')
     selec = sqrt(freq_ref_data.powspctrm);
 end
 
-%%   Performing IC CLASSIFICATION
 
 n_iter=size(iteration,2);
 for j=1:n_iter
@@ -162,14 +154,6 @@ for j=1:n_iter
     %----> IC POWER TIME COURSE <----
     %--------------------------------
     
-    %     cfg = [];
-    %
-    %     cfg.bpfilter      = 'yes'; %'no' or 'yes'  bandpass filter (default = 'no')
-    %     cfg.bpfreq        = cfgin.bpfreq;
-    %     cfg.hilbert='abs';
-    %
-    %     pow_data                 = ft_preprocessing(cfg,comp_iter);
-    %
     pow_data=comp_iter.pow_data;
     temp_struc(j).pow_data=pow_data;
     pIC = cell2mat(pow_data.trial).^2;
@@ -187,7 +171,6 @@ for j=1:n_iter
         
         IC=cell2mat(comp_iter.trial);
         if isfield(cfgin,'ref_channels')
-            %             elec=ref_data.trial{1};
             if nref > 0
                 
                 %   ----- Correlation between the ICs and electric channels
@@ -218,23 +201,6 @@ for j=1:n_iter
         
         %   ----- Fit with 1/f spectrum, flat spectrum "quantification", IC time kurtosis
         
-        
-        %!FROM GIORGOS:
-        % Replaced below the fittype function with hcp_fitspectrum, so the compiled
-        % version can run on WashU, according to instructions from the help
-        % of the function i.e.:
-        % ------------------------------------------
-        % Example:
-        %   x = (1:100)';
-        %   y = 2./x + 3 + 0.1*rand(size(x));
-        %   [fitx, goodness] = hcp_fitspectrum(x, y)
-        %
-        % This replaces the following use of the fit() function from
-        % the Mathworks curve fitting toolbox
-        %   g = fittype('abs(a)*1/x + abs(b)')
-        %   [fitx, goodness] = fit(x, y, g)
-        %--------------------------------------------
-        %g = fittype('abs(a)*1/x + b'); % COMMENTED OUT BY GIORGOS
         frq = [cfgin.bpfreq(1,1) 13];
         frq2 = [2 78];
         vec = find(F > frq(1) & F < frq(2));
@@ -242,7 +208,6 @@ for j=1:n_iter
         for ix = 1:Nc
             sspettro = mspettro(ix,:);
             sspettro_fit=sspettro./sspettro(vec(1,1));
-            %[fitx,goodness] = fit(F(vec)',sspettro_fit(vec)',g); % COMMENTED OUT BY GIORGOS
             [fitx,goodness] = hcp_fitspectrum(F(vec)',sspettro_fit(vec)');
             if(fitx.a>0)
                 G(ix) = goodness.rsquare;
@@ -261,8 +226,7 @@ for j=1:n_iter
         thres_d = 0.5;  % PSD 1/f
         thres_e = 2.02; % Spectrum Flat
         thres_f = 15;   % IC Time Kurtosis
-        %     thres_g = 0.1;
-        %     thres_h = 15;
+        
         
         %----------------------------------------------------------
         %       classification: 0=artifact   1=brain signal
